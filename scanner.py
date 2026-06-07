@@ -4,10 +4,10 @@ import pandas as pd
 import numpy as np
 
 # 1. Seiten-Konfiguration
-st.set_page_config(page_title="RESTOR Trading Terminal", page_icon="📈", layout="wide")
+st.set_page_config(page_title="RSL Sektorübersicht -  Trading Terminal", page_icon="📈", layout="wide")
 
 st.title("🖥️ RESTOR Trading Terminal")
-st.markdown("**Regelwerk:** 4h-Chart | v6.1 & v7.1 Setups | 0,5 % Risiko pro Trade")
+st.markdown("**Regelwerk:** 4h-Chart | Einzelaktien im Sektor werden nur in Richtung der Freigabe getradet")
 
 with st.expander("📖 Wie deute ich diese App? (Die RESTOR-Logik)"):
     st.markdown('''
