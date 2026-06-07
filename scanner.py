@@ -1,98 +1,59 @@
 import streamlit as st
 import yfinance as yf
 import pandas as pd
-import numpy as np
 
-# 1. Seiten-Konfiguration
-st.set_page_config(page_title="RSL Sektorübersicht -  Trading Terminal", page_icon="📈", layout="wide")
-
+st.set_page_config(page_title="RESTOR Trading Terminal", page_icon="📈", layout="wide")
 st.title("🖥️ RESTOR Trading Terminal")
-st.markdown("**Regelwerk:** 4h-Chart | Einzelaktien im Sektor werden nur in Richtung der Freigabe getradet")
 
-with st.expander("📖 Wie deute ich diese App? (Die RESTOR-Logik)"):
-    st.markdown('''
-    Dieses Terminal filtert den institutionellen Kapitalfluss durch Messung der **Relative Stärke (RSL)**. 
-    Formel: RSL = Aktueller Kurs / SMA 130.
-    
-    * 🟢 **Long-Freigabe (RSL >= 1.010):** Sektor notiert stabil über dem SMA 130. **Aktion:** Im 4h-Chart nach Long-Mustern suchen.
-    * 🔴 **Short-Fokus (RSL <= 0.989):** Sektor notiert signifikant unter dem SMA 130. **Aktion:** Im 4h-Chart nach Short-Setups suchen.
-    * 🟡 **Neutral / Pause (RSL 0.990 - 1.009):** Trendlos. **Aktion:** Ignorieren.
-    ''')
-
-st.markdown("---")
-
-# 2. RESTOR Daten-Engine
 @st.cache_data(ttl=3600)
 def fetch_sector_data():
-    sector_map_us = {
-        "XLK": "Technologie", "XLF": "Finanzen", "XLC": "Kommunikation", 
-        "XLY": "Zyklischer Konsum", "XLV": "Gesundheit", "XLI": "Industrie", 
-        "XLP": "Basiskonsum", "XLE": "Energie", "XLB": "Materialien", 
-        "XLRE": "Immobilien", "XLU": "Versorger"
+    # Definiere die Sektoren
+    maps = {
+        "US": {"XLK": "Technologie", "XLF": "Finanzen", "XLC": "Kommunikation", "XLY": "Zykl. Konsum", "XLV": "Gesundheit", "XLI": "Industrie", "XLP": "Basiskonsum", "XLE": "Energie", "XLB": "Materialien", "XLRE": "Immobilien", "XLU": "Versorger"},
+        "EU": {"EXV3.DE": "Technologie", "EXV1.DE": "Banken", "EXV2.DE": "Telekommunikation", "EXV6.DE": "Automobile", "EXV4.DE": "Gesundheit", "EXV9.DE": "Industrie", "EXV8.DE": "Nahrungsmittel", "EXVC.DE": "Energie", "EXVK.DE": "Grundstoffe", "EXVE.DE": "Immobilien", "EXVG.DE": "Versorger"}
     }
     
-    sector_map_eu = {
-        "EXV3.DE": "Technologie", "EXV1.DE": "Banken", "EXV2.DE": "Telekommunikation", 
-        "EXV6.DE": "Automobile & Teile", "EXV4.DE": "Gesundheit", "EXV9.DE": "Industrie", 
-        "EXV8.DE": "Nahrungsmittel", "EXVC.DE": "Energie", "EXVK.DE": "Grundstoffe", 
-        "EXVE.DE": "Immobilien", "EXVG.DE": "Versorger"
-    }
+    results = {"US": [], "EU": []}
+    counts = {"US": 0, "EU": 0}
     
-    def process_sectors(sector_map):
-        results = []
-        green = 0
+    for region, sector_map in maps.items():
         for ticker, name in sector_map.items():
-            ticker_data = yf.download(ticker, period="200d", progress=False)['Close']
-            if ticker_data.empty or len(ticker_data) < 130: continue
+            try:
+                # Sicherer Download-Versuch
+                data = yf.download(ticker, period="200d", progress=False)
+                if 'Close' not in data.columns or data['Close'].dropna().empty:
+                    continue
                 
-            current_price = ticker_data.iloc[-1]
-            sma_130 = ticker_data.rolling(window=130).mean().iloc[-1]
-            rsl = 0.0 if pd.isna(sma_130) or sma_130 == 0 else current_price / sma_130
-            
-            status = "🟢 Long" if rsl >= 1.010 else ("🔴 Short" if rsl <= 0.989 else "🟡 Neutral")
-            if rsl >= 1.010: green += 1
+                prices = data['Close'].dropna()
+                if len(prices) < 130: continue
                 
-            results.append({
-                "Sektor": f"{ticker} ({name})", 
-                "Kurs": current_price,
-                "SMA 130": sma_130,
-                "RSL": rsl, 
-                "Signal": status
-            })
-        df = pd.DataFrame(results)
-        return df.sort_values(by="RSL", ascending=False), green
-        
-    df_us, green_us = process_sectors(sector_map_us)
-    df_eu, green_eu = process_sectors(sector_map_eu)
-    return df_us, green_us, df_eu, green_eu
+                curr = float(prices.iloc[-1])
+                sma = float(prices.rolling(window=130).mean().iloc[-1])
+                rsl = curr / sma if sma != 0 else 0
+                
+                status = "🟢 Long" if rsl >= 1.010 else ("🔴 Short" if rsl <= 0.989 else "🟡 Neutral")
+                if rsl >= 1.010: counts[region] += 1
+                
+                results[region].append({"Sektor": f"{ticker} ({name})", "Kurs": curr, "SMA 130": sma, "RSL": rsl, "Signal": status})
+            except:
+                continue # Fehler bei einem Ticker? Einfach ignorieren und weiter.
+                
+    return pd.DataFrame(results["US"]), counts["US"], pd.DataFrame(results["EU"]), counts["EU"]
 
-with st.spinner("Aktualisiere Sektor-Matrix..."):
-    df_us, green_us, df_eu, green_eu = fetch_sector_data()
+# App-Logik
+df_us, c_us, df_eu, c_eu = fetch_sector_data()
 
-def color_signals(val):
-    if '🟢' in str(val): return 'background-color: rgba(0, 255, 0, 0.1)'
-    elif '🔴' in str(val): return 'background-color: rgba(255, 0, 0, 0.1)'
-    elif '🟡' in str(val): return 'background-color: rgba(255, 255, 0, 0.1)'
-    return ''
+def style_df(df):
+    return df.style.map(lambda v: 'background-color: rgba(0,255,0,0.1)' if '🟢' in str(v) else ('background-color: rgba(255,0,0,0.1)' if '🔴' in str(v) else ''), subset=['Signal']).format({"Kurs": "{:.3f}", "SMA 130": "{:.3f}", "RSL": "{:.3f}"})
 
 st.markdown("### 🇺🇸 RSL - SP500")
-st.metric("Marktbreite (Grün)", f"{green_us} / 11")
-st.dataframe(
-    df_us.style.map(color_signals, subset=['Signal']).format({
-        "Kurs": "{:.3f}", "SMA 130": "{:.3f}", "RSL": "{:.3f}"
-    }),
-    use_container_width=True, hide_index=True
-)
+st.metric("Marktbreite (Grün)", f"{c_us} / 11")
+st.dataframe(style_df(df_us), use_container_width=True, hide_index=True)
 
 st.markdown("### 🇪🇺 RSL - Eurostoxx")
-st.metric("Marktbreite (Grün)", f"{green_eu} / 11")
-st.dataframe(
-    df_eu.style.map(color_signals, subset=['Signal']).format({
-        "Kurs": "{:.3f}", "SMA 130": "{:.3f}", "RSL": "{:.3f}"
-    }),
-    use_container_width=True, hide_index=True
-)
+st.metric("Marktbreite (Grün)", f"{c_eu} / 11")
+st.dataframe(style_df(df_eu), use_container_width=True, hide_index=True)
 
-if st.button("🔄 Live-Daten aktualisieren"):
+if st.button("🔄 Daten neu laden"):
     st.cache_data.clear()
     st.rerun()
