@@ -6,13 +6,39 @@ import pandas as pd
 st.set_page_config(page_title="RESTOR Trading Terminal", page_icon="📈", layout="wide")
 
 st.title("🖥️ RESTOR Trading Terminal")
-st.markdown("**Regelwerk:** 4h-Chart | Sektor-Rotation | v6.1 & v7.1 | 0,5 % Risiko pro Trade")
+st.markdown("**Regelwerk:** 4h-Chart | v6.1 & v7.1 Setups | 0,5 % Risiko pro Trade")
+
+with st.expander("📖 Wie deute ich diese App? (Die RESTOR-Logik)"):
+    st.markdown('''
+    Dieses Terminal filtert den institutionellen Kapitalfluss, indem es die **Relative Stärke (RSL)** der 11 US-Kernsektoren misst. 
+    Dafür wird der aktuelle Kurs durch den gleitenden Durchschnitt der letzten 130 Tage (SMA 130) geteilt.
+    
+    * 🟢 **Long-Freigabe (RSL >= 1.010):** Der Sektor notiert stabil (> 1 %) über dem Durchschnitt. Das Momentum ist bullisch. **Aktion:** Im 4h-Chart nach Long-Mustern suchen.
+    * 🔴 **Short-Fokus (RSL <= 0.989):** Der Sektor notiert signifikant unter dem Durchschnitt. Echter Verkaufsdruck. **Aktion:** Im 4h-Chart nach Short-Setups suchen.
+    * 🟡 **Neutral / Pause (RSL 0.990 - 1.009):** Die "Todeszone" direkt am Durchschnitt. Kein klarer Trend. **Aktion:** Sektor komplett ignorieren, Kapital schützen.
+    ''')
+
 st.markdown("---")
 
 # 2. RESTOR Daten-Engine (Live von Yahoo Finance)
 @st.cache_data(ttl=3600)
 def fetch_restor_data():
-    tickers = ["XLK", "XLF", "XLC", "XLY", "XLV", "XLI", "XLP", "XLE", "XLB", "XLRE", "XLU"]
+    # Das Wörterbuch: Kürzel + echter Name
+    sector_map = {
+        "XLK": "Technologie",
+        "XLF": "Finanzen",
+        "XLC": "Kommunikation",
+        "XLY": "Zyklischer Konsum",
+        "XLV": "Gesundheit",
+        "XLI": "Industrie",
+        "XLP": "Basiskonsum",
+        "XLE": "Energie",
+        "XLB": "Materialien",
+        "XLRE": "Immobilien",
+        "XLU": "Versorger"
+    }
+    
+    tickers = list(sector_map.keys())
     data = yf.download(tickers, period="200d", progress=False)['Close']
     
     results = []
@@ -33,7 +59,7 @@ def fetch_restor_data():
             status = "🟡 Neutral (Pause)"
             
         results.append({
-            "Sektor ETF": ticker, 
+            "Sektor ETF": f"{ticker} ({sector_map[ticker]})", 
             "Kurs ($)": round(current_price, 2),
             "SMA 130": round(sma_130, 2),
             "RSL (RESTOR)": round(rsl, 3), 
@@ -74,7 +100,7 @@ if st.button("🔄 Live-Daten jetzt aktualisieren"):
 
 st.markdown("---")
 
-# 4. Makro-Indikatoren Dashboard (Auf der selben Seite)
+# 4. Makro-Indikatoren Dashboard
 st.markdown("### 🌍 10 Kern-Indikatoren (Makro-Wetter)")
 st.markdown("*Statische Übersicht für den Gesamtmarkt. Fokus liegt immer auf der Sektor-Auswertung oben.*")
 
