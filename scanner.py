@@ -117,5 +117,76 @@ def fetch_all_data():
     macd_signal = "🟢 Bullisch" if hist_val > 0 else "🔴 Bärisch"
     
     macro_list = [
-        {"Indik
+        {"Indikator": "VIX", "Aktueller Wert": vix_val, "Signal": vix_signal, "Typ": "Automatisch"},
+        {"Indikator": "RSI (14-Tage)", "Aktueller Wert": rsi_val, "Signal": rsi_signal, "Typ": "Automatisch"},
+        {"Indikator": "MACD Histogram", "Aktueller Wert": hist_val, "Signal": macd_signal, "Typ": "Automatisch"},
+        {"Indikator": "Put/Call Ratio (CBOE)", "Aktueller Wert": 0.950, "Signal": "🟡 Neutral", "Typ": "Händisch"},
+        {"Indikator": "AAII Sentiment Survey", "Aktueller Wert": 38.000, "Signal": "🟡 Neutral", "Typ": "Händisch"},
+        {"Indikator": "P/E Ratio (trailing)", "Aktueller Wert": 24.100, "Signal": "🔴 Bärisch", "Typ": "Händisch"},
+        {"Indikator": "On-Balance Volume (OBV)", "Aktueller Wert": 0.000, "Signal": "🔴 Bärisch", "Typ": "Händisch"},
+        {"Indikator": "Credit Spreads (BBB vs 10Y)", "Aktueller Wert": 1.150, "Signal": "🟢 Bullisch", "Typ": "Händisch"},
+        {"Indikator": "Advance-Decline Line", "Aktueller Wert": 0.000, "Signal": "🟡 Neutral", "Typ": "Händisch"},
+        {"Indikator": "CNN Fear & Greed Index", "Aktueller Wert": 45.000, "Signal": "🟡 Neutral", "Typ": "Händisch"}
+    ]
+    df_macro = pd.DataFrame(macro_list)
     
+    return df_us, green_us, df_eu, green_eu, df_macro
+
+with st.spinner("Aktualisiere Terminal-Daten..."):
+    df_us, green_us, df_eu, green_eu, df_macro = fetch_all_data()
+
+def color_signals(val):
+    if '🟢' in str(val): return 'background-color: rgba(0, 255, 0, 0.1)'
+    elif '🔴' in str(val): return 'background-color: rgba(255, 0, 0, 0.1)'
+    elif '🟡' in str(val): return 'background-color: rgba(255, 255, 0, 0.1)'
+    return ''
+
+st.markdown("### 🇺🇸 RSL - SP500")
+col1, col2, col3 = st.columns(3)
+col1.metric("Marktbreite (Grün)", f"{green_us} / 11")
+if not df_us.empty:
+    col2.metric("Stärkster Sektor", df_us.iloc[0]["Sektor ETF"], f"{df_us.iloc[0]['RSL (RESTOR)']:.3f}")
+    col3.metric("Schwächster Sektor", df_us.iloc[-1]["Sektor ETF"], f"{df_us.iloc[-1]['RSL (RESTOR)']:.3f}")
+
+st.dataframe(
+    df_us.style.map(color_signals, subset=['Signal']).format({
+        "Kurs": "{:.3f}", "SMA 130": "{:.3f}", "RSL (RESTOR)": "{:.3f}"
+    }),
+    use_container_width=True, hide_index=True
+)
+
+st.markdown("### 🇪🇺 RSL - Eurostoxx")
+col4, col5, col6 = st.columns(3)
+col4.metric("Marktbreite (Grün)", f"{green_eu} / 11")
+if not df_eu.empty:
+    col5.metric("Stärkster Sektor", df_eu.iloc[0]["Sektor ETF"], f"{df_eu.iloc[0]['RSL (RESTOR)']:.3f}")
+    col6.metric("Schwächster Sektor", df_eu.iloc[-1]["Sektor ETF"], f"{df_eu.iloc[-1]['RSL (RESTOR)']:.3f}")
+
+st.dataframe(
+    df_eu.style.map(color_signals, subset=['Signal']).format({
+        "Kurs": "{:.3f}", "SMA 130": "{:.3f}", "RSL (RESTOR)": "{:.3f}"
+    }),
+    use_container_width=True, hide_index=True
+)
+
+if st.button("🔄 Live-Daten jetzt aktualisieren"):
+    st.cache_data.clear()
+    st.rerun()
+
+st.markdown("---")
+
+st.markdown("### 🌍 10 Kern-Indikatoren (Makro-Wetter)")
+def style_macro_rows(row):
+    if row['Typ'] == 'Händisch':
+        return ['background-color: rgba(128, 128, 128, 0.2); color: #999999; font-style: italic'] * len(row)
+    else:
+        if '🟢' in str(row['Signal']): return ['background-color: rgba(0, 255, 0, 0.1)'] * len(row)
+        elif '🔴' in str(row['Signal']): return ['background-color: rgba(255, 0, 0, 0.1)'] * len(row)
+        else: return ['background-color: rgba(255, 255, 0, 0.1)'] * len(row)
+
+st.dataframe(
+    df_macro.style.apply(style_macro_rows, axis=1).format({
+        "Aktueller Wert": "{:.3f}"
+    }),
+    use_container_width=True, hide_index=True
+)
