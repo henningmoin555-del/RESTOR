@@ -64,7 +64,7 @@ def color_signals(val):
     return ''
 
 st.dataframe(
-    df_sectors.style.applymap(color_signals, subset=['Signal']),
+    df_sectors.style.map(color_signals, subset=['Signal']),
     use_container_width=True
 )
 
@@ -93,6 +93,6 @@ macro_data = [
 
 df_macro = pd.DataFrame(macro_data)
 st.dataframe(
-    df_macro.style.applymap(color_signals, subset=['Signal']),
+    df_macro.style.map(color_signals, subset=['Signal']),
     use_container_width=True
 )
