@@ -24,33 +24,33 @@ def fetch_sector_data():
                 if not df.empty and 'Close' in df.columns:
                     prices = df['Close'].dropna()
                     if len(prices) >= 130:
-                        # Hier die Korrektur: .item() extrahiert den Wert sicher
                         curr = float(prices.iloc[-1].item())
                         sma = float(prices.rolling(window=130).mean().iloc[-1].item())
-                        
                         rsl = curr / sma if sma != 0 else 0
                         status = "🟢 Long" if rsl >= 1.010 else ("🔴 Short" if rsl <= 0.989 else "🟡 Neutral")
                         if rsl >= 1.010: green += 1
-                        
                         results.append({"Sektor": f"{ticker} ({name})", "Kurs": curr, "SMA 130": sma, "RSL": rsl, "Signal": status})
             except Exception:
                 continue
         
-        data_frames[region] = pd.DataFrame(results)
+        # HIER WIRD AUTOMATISCH SORTIERT
+        df_final = pd.DataFrame(results)
+        if not df_final.empty:
+            df_final = df_final.sort_values(by="RSL", ascending=False)
+            
+        data_frames[region] = df_final
         green_counts[region] = green
         
     return data_frames["US"], green_counts["US"], data_frames["EU"], green_counts["EU"]
 
-# Daten abrufen
+# Daten abrufen & Anzeige (gleich wie vorher)
 df_us, c_us, df_eu, c_eu = fetch_sector_data()
 
 def display_table(df, title, count):
     st.markdown(f"### {title}")
     st.metric("Marktbreite (Grün)", f"{count} / 11")
     if not df.empty:
-        # Formatierung: Wir stellen sicher, dass alle Spalten numerisch sind
         styled_df = df.style.format({"Kurs": "{:.3f}", "SMA 130": "{:.3f}", "RSL": "{:.3f}"})
-        # Einfärben basierend auf dem 'Signal' Text
         styled_df = styled_df.map(lambda v: 'background-color: rgba(0,255,0,0.1)' if '🟢' in str(v) else ('background-color: rgba(255,0,0,0.1)' if '🔴' in str(v) else ''), subset=['Signal'])
         st.dataframe(styled_df, use_container_width=True, hide_index=True)
     else:
