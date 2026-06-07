@@ -19,17 +19,22 @@ def fetch_sector_data():
         results = []
         green = 0
         for ticker, name in sector_map.items():
-            # Daten explizit laden
-            df = yf.download(ticker, period="150d", progress=False)
-            if not df.empty and 'Close' in df.columns:
-                prices = df['Close'].dropna()
-                if len(prices) >= 130:
-                    curr = float(prices.iloc[-1])
-                    sma = float(prices.rolling(window=130).mean().iloc[-1])
-                    rsl = curr / sma if sma != 0 else 0
-                    status = "🟢 Long" if rsl >= 1.010 else ("🔴 Short" if rsl <= 0.989 else "🟡 Neutral")
-                    if rsl >= 1.010: green += 1
-                    results.append({"Sektor": f"{ticker} ({name})", "Kurs": curr, "SMA 130": sma, "RSL": rsl, "Signal": status})
+            try:
+                df = yf.download(ticker, period="150d", progress=False)
+                if not df.empty and 'Close' in df.columns:
+                    prices = df['Close'].dropna()
+                    if len(prices) >= 130:
+                        # Hier die Korrektur: .item() extrahiert den Wert sicher
+                        curr = float(prices.iloc[-1].item())
+                        sma = float(prices.rolling(window=130).mean().iloc[-1].item())
+                        
+                        rsl = curr / sma if sma != 0 else 0
+                        status = "🟢 Long" if rsl >= 1.010 else ("🔴 Short" if rsl <= 0.989 else "🟡 Neutral")
+                        if rsl >= 1.010: green += 1
+                        
+                        results.append({"Sektor": f"{ticker} ({name})", "Kurs": curr, "SMA 130": sma, "RSL": rsl, "Signal": status})
+            except Exception:
+                continue
         
         data_frames[region] = pd.DataFrame(results)
         green_counts[region] = green
@@ -43,15 +48,13 @@ def display_table(df, title, count):
     st.markdown(f"### {title}")
     st.metric("Marktbreite (Grün)", f"{count} / 11")
     if not df.empty:
-        # Hier wird die Formatierung direkt angewendet
-        styled_df = df.style.map(
-            lambda v: 'background-color: rgba(0,255,0,0.1)' if '🟢' in str(v) 
-            else ('background-color: rgba(255,0,0,0.1)' if '🔴' in str(v) else ''),
-            subset=['Signal'] if 'Signal' in df.columns else None
-        ).format({"Kurs": "{:.3f}", "SMA 130": "{:.3f}", "RSL": "{:.3f}"})
+        # Formatierung: Wir stellen sicher, dass alle Spalten numerisch sind
+        styled_df = df.style.format({"Kurs": "{:.3f}", "SMA 130": "{:.3f}", "RSL": "{:.3f}"})
+        # Einfärben basierend auf dem 'Signal' Text
+        styled_df = styled_df.map(lambda v: 'background-color: rgba(0,255,0,0.1)' if '🟢' in str(v) else ('background-color: rgba(255,0,0,0.1)' if '🔴' in str(v) else ''), subset=['Signal'])
         st.dataframe(styled_df, use_container_width=True, hide_index=True)
     else:
-        st.warning("Keine Daten für diese Region verfügbar. Bitte Aktualisieren-Button drücken.")
+        st.warning("Keine Daten verfügbar. Bitte 'Daten neu laden' klicken.")
 
 display_table(df_us, "🇺🇸 RSL - SP500", c_us)
 display_table(df_eu, "🇪🇺 RSL - Eurostoxx", c_eu)
