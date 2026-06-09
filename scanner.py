@@ -6,33 +6,33 @@ import numpy as np
 # --- Konfiguration & Konstanten ---
 st.set_page_config(page_title="RESTOR Trading Terminal", page_icon="📈", layout="wide")
 
-# Interne Sektor-Datenbanken für Einzelaktien (Erweitere diese nach Belieben)
-SP500_STOCKS = {
-    "XLK": ["AAPL", "MSFT", "NVDA", "AVGO", "ADBE", "CRM", "AMD", "INTC", "CSCO", "QCOM", "TXN", "IBM", "AMAT", "NOW", "INTU"],
-    "XLF": ["BRK-B", "JPM", "V", "MA", "BAC", "WFC", "SPGI", "GS", "MS", "AXP", "C", "BLK", "CB", "PGR", "MMC"],
-    "XLC": ["META", "GOOGL", "NFLX", "TMUS", "CHTR", "DIS", "EA", "TTWO"],
-    "XLY": ["AMZN", "TSLA", "HD", "MCD", "LOW", "NKE", "SBUX", "TJX", "ORLY"],
-    "XLV": ["LLY", "UNH", "JNJ", "ABV", "MRK", "TMO", "ABT", "PFE", "AMGN"],
-    "XLI": ["GE", "CAT", "UNP", "HON", "ETN", "WM", "FEDEX", "UPS", "LMT"],
-    "XLP": ["PG", "COST", "WMT", "KO", "PEP", "PM", "MO", "CL"],
-    "XLE": ["XOM", "CVX", "COP", "EOG", "SLB", "MPC", "PSX", "VLO"],
-    "XLB": ["LIN", "APD", "SHW", "FCX", "ECL", "NEM"],
-    "XLRE": ["PLD", "AMT", "CCI", "EQIX", "PSA"],
-    "XLU": ["NEE", "SO", "DUK", "CEG", "SRE", "AEP"]
+# Interne Sektor-Datenbanken für Einzelaktien
+SP500_AKTIEN = {
+    "XLK": ["AAPL", "MSFT", "NVDA", "AVGO", "ADBE", "CRM", "AMD", "INTC", "CSCO", "QCOM", "TXN", "IBM", "AMAT", "NOW", "INTU", "ORCL", "PANW", "MU", "LRCX", "KLAC"],
+    "XLF": ["BRK-B", "JPM", "V", "MA", "BAC", "WFC", "SPGI", "GS", "MS", "AXP", "C", "BLK", "CB", "PGR", "MMC", "SCHW", "CME", "AON", "ICE", "USB"],
+    "XLC": ["META", "GOOGL", "NFLX", "TMUS", "CHTR", "DIS", "EA", "TTWO", "CMCSA", "VZ", "T", "WBD", "OMC", "IPG", "LYV", "FOXA", "NWSA"],
+    "XLY": ["AMZN", "TSLA", "HD", "MCD", "LOW", "NKE", "SBUX", "TJX", "ORLY", "BKNG", "MAR", "GM", "F", "CMG", "LVS", "RCL", "HLT", "EBAY", "ROST", "YUM"],
+    "XLV": ["LLY", "UNH", "JNJ", "ABBV", "MRK", "TMO", "ABT", "PFE", "AMGN", "DHR", "ISRG", "SYK", "BMY", "CVS", "CI", "BSX", "MDT", "EW", "VRTX", "ZTS"],
+    "XLI": ["GE", "CAT", "UNP", "HON", "ETN", "WM", "FDX", "UPS", "LMT", "RTX", "BA", "DE", "CSX", "NSC", "GWW", "EMR", "ROP", "PH", "PCAR", "TT"],
+    "XLP": ["PG", "COST", "WMT", "KO", "PEP", "PM", "MO", "CL", "TGT", "EL", "KMB", "GIS", "HSY", "KR", "K", "CHD", "SYY", "STZ", "ADM", "MDLZ"],
+    "XLE": ["XOM", "CVX", "COP", "EOG", "SLB", "MPC", "PSX", "VLO", "OXY", "WMB", "KMI", "HES", "BKR", "HAL", "DVN", "FANG", "TRGP", "CTRA", "MRO"],
+    "XLB": ["LIN", "APD", "SHW", "FCX", "ECL", "NEM", "DOW", "NUE", "CTVA", "DD", "VMC", "MLM", "ALB", "CE", "EMN", "FMC", "CF", "MOS"],
+    "XLRE": ["PLD", "AMT", "CCI", "EQIX", "PSA", "O", "SPG", "WELL", "DLR", "CSGP", "AVB", "EQR", "VTR", "ARE", "EXR", "INVH", "BXP"],
+    "XLU": ["NEE", "SO", "DUK", "CEG", "SRE", "AEP", "D", "EXC", "XEL", "ED", "PEG", "WEC", "AWK", "ETR", "FE", "EIX", "PPL"]
 }
 
-EUROSTOXX_STOCKS = {
-    "Technologie": ["ASML.AS", "SAP.DE", "INF.DE", "ASM.AS", "CAP.PA"],
-    "Finanzen": ["SAN.MC", "BNP.PA", "ALV.DE", "INGA.AS", "ISP.MI"],
-    "Kommunikation": ["ORAN.PA", "DTE.DE", "VOD.L"],
-    "Zyklischer Konsum": ["RMS.PA", "LVMH.PA", "OR.PA", "BMW.DE", "MBG.DE"],
-    "Gesundheit": ["SAN.PA", "BAYN.DE", "MRK.DE"],
-    "Industrie": ["SIE.DE", "AIR.PA", "DHL.DE", "ALST.PA"],
-    "Basiskonsum": ["HEIA.AS", "BN.PA", "ULVR.L"],
-    "Energie": ["TTE.PA", "ENI.MI", "REP.MC"],
-    "Materialien": ["BAS.DE", "CRH.L"],
-    "Immobilien": ["VNA.DE"],
-    "Versorger": ["IBE.MC", "ENEL.MI", "RWE.DE"]
+EUROSTOXX_AKTIEN = {
+    "Technologie": ["ASML.AS", "SAP.DE", "INF.DE", "ASM.AS", "CAP.PA", "SU.PA", "BSEM.AS", "DSY.PA", "STM.MI", "NOKIA.HE"],
+    "Finanzen": ["SAN.MC", "BNP.PA", "ALV.DE", "INGA.AS", "ISP.MI", "MUV2.DE", "CS.PA", "BBVA.MC", "UCG.MI", "DBK.DE", "KBC.BR", "NDA-FI.HE"],
+    "Kommunikation": ["ORAN.PA", "DTE.DE", "VOD.L", "TEF.MC", "KPN.AS", "TIM.MI", "VIV.PA", "PROX.BR", "DNA.HE"],
+    "Zyklischer Konsum": ["RMS.PA", "LVMH.PA", "OR.PA", "BMW.DE", "MBG.DE", "VOW3.DE", "STE.PA", "IAG.MC", "PUM.DE", "CDI.PA", "ITX.MC", "RNO.PA"],
+    "Gesundheit": ["SAN.PA", "BAYN.DE", "MRK.DE", "UCB.BR", "FRE.DE", "QIA.DE", "EL.PA", "FME.DE", "SRG.MI"],
+    "Industrie": ["SIE.DE", "AIR.PA", "DHL.DE", "ALST.PA", "SU.PA", "SAF.PA", "DSY.PA", "VCI.PA", "HO.PA", "ENR.DE", "MTX.DE", "PRY.MI"],
+    "Basiskonsum": ["HEIA.AS", "BN.PA", "ULVR.L", "ABI.BR", "ABEA.DE", "BEI.DE", "CA.PA", "AH.AS", "KERRY.I"],
+    "Energie": ["TTE.PA", "ENI.MI", "REP.MC", "TEN.MI", "OMV.VI", "SHEL.AS", "GALP.LS", "NESTE.HE"],
+    "Materialien": ["BAS.DE", "CRH.L", "AI.PA", "SY1.DE", "MT.AS", "UPM.HE", "COV.DE", "HEI.DE", "DSM.AS", "SOLB.BR"],
+    "Immobilien": ["VNA.DE", "URW.AS", "LEG.DE", "AROUNDTOWN.DE", "ICAD.PA", "KLEIM.PA", "WDP.BR"],
+    "Versorger": ["IBE.MC", "ENEL.MI", "RWE.DE", "ENGIE.PA", "EOAN.DE", "EDP.LS", "ITRN.MI", "TER.MC", "FUM1V.HE"]
 }
 
 SECTOR_MAP = {
@@ -120,22 +120,28 @@ def analyze_stocks(tickers, apply_ema_filter, rsl_threshold):
         df = df.sort_values(by="RSL", ascending=False).head(15)
     return df
 
-def color_match(val):
+def color_cells(val):
+    """Zentrale Farblogik für Long, Short, Neutral und Matches."""
     if isinstance(val, str):
-        if "Match 🟢" in val: return 'background-color: rgba(0, 255, 0, 0.2)'
-        if "Match 🔴" in val: return 'background-color: rgba(255, 0, 0, 0.2)'
-        if "Mismatch ⚠️" in val: return 'background-color: rgba(255, 165, 0, 0.2)'
+        if val == "Long" or "Match 🟢" in val:
+            return 'background-color: rgba(0, 255, 0, 0.2)'
+        elif val == "Short" or "Match 🔴" in val:
+            return 'background-color: rgba(255, 0, 0, 0.2)'
+        elif val == "Neutral":
+            return 'background-color: rgba(255, 255, 0, 0.2)'
+        elif "Mismatch ⚠️" in val:
+            return 'background-color: rgba(255, 165, 0, 0.2)'
     return ''
 
 def display_styled_dataframe(df):
-    """Sicheres Einfärben der Tabelle, egal welche Pandas Version installiert ist."""
+    """Sicheres Einfärben der gesamten Tabelle, egal welche Pandas Version installiert ist."""
     if df.empty:
         st.write("Keine Daten vorhanden.")
         return
     try:
-        st.dataframe(df.style.map(color_match, subset=['Status']), use_container_width=True)
+        st.dataframe(df.style.map(color_cells), use_container_width=True)
     except AttributeError:
-        st.dataframe(df.style.applymap(color_match, subset=['Status']), use_container_width=True)
+        st.dataframe(df.style.applymap(color_cells), use_container_width=True)
 
 # --- UI Aufbau ---
 st.title("🖥️ RESTOR Trading Terminal (v6.1 & v7.1)")
@@ -145,11 +151,11 @@ st.markdown("**Regelwerk:** 4h-Chart Ausführung | 1d-Filterung | 0,5 % Risiko p
 st.markdown("---")
 st.header("Schritt 1: Sektor-RSL Analyse")
 df_sectors = fetch_sector_rsl()
-st.dataframe(df_sectors, use_container_width=True)
+display_styled_dataframe(df_sectors)
 
 # SCHRITT 2: Manueller Abgleich
 st.markdown("---")
-st.header("Schritt 2: Signalvalidierung (Manuell)")
+st.header("Schritt 2: Sektortrend hinterlegen (Höhere Hochs / Höhere Tiefs)")
 st.markdown("Trage hier die Werte (Long/Short/Neutral) aus deiner Marktstruktur-Tabelle ein.")
 
 match_data = df_sectors.copy()
@@ -219,7 +225,7 @@ else:
     with tab1:
         for sector in long_matches:
             st.subheader(f"Sektor: {sector} ({SECTOR_MAP[sector]})")
-            tickers_to_check = SP500_STOCKS.get(sector, [])
+            tickers_to_check = SP500_AKTIEN.get(sector, [])
             
             if tickers_to_check:
                 with st.spinner(f"Scanne {len(tickers_to_check)} Aktien..."):
@@ -234,7 +240,7 @@ else:
         for sector in long_matches:
             sector_name = SECTOR_MAP[sector]
             st.subheader(f"Europa Sektor: {sector_name}")
-            eu_tickers = EUROSTOXX_STOCKS.get(sector_name, [])
+            eu_tickers = EUROSTOXX_AKTIEN.get(sector_name, [])
             
             if eu_tickers:
                 with st.spinner(f"Scanne {len(eu_tickers)} europäische Aktien..."):
