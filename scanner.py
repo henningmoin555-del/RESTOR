@@ -191,4 +191,63 @@ with col_result:
     else:
         st.warning("Noch keine perfekten Matches gefunden. Kapital schützen.")
         
-    st.markdown("
+    st.markdown("### ❌ Unstimmigkeiten (Mismatches)")
+    display_styled_dataframe(df_mismatches)
+
+# --- SCHRITT 3: Einzelaktien Deep Dive ---
+st.markdown("---")
+st.header("Schritt 3: Einzelaktien Deep Dive")
+
+long_matches = edited_df[edited_df['Status'] == 'Match 🟢']['Sektor'].tolist()
+
+if not long_matches:
+    st.info("Warte auf bestätigte 'Match 🟢' Sektoren aus Schritt 2...")
+else:
+    st.success(f"Starte High-Momentum-Scan für: {', '.join(long_matches)}")
+    
+    col_f1, col_f2 = st.columns(2)
+    with col_f1:
+        rsl_limit = st.slider("Minimale Relative Stärke (RSL)", min_value=1.00, max_value=1.20, value=1.05, step=0.01, help="1.05 bedeutet, die Aktie notiert 5% über ihrem SMA 130.")
+    with col_f2:
+        st.write("") 
+        st.write("")
+        apply_ema = st.checkbox("Zwingend: Nur Aktien mit frischem EMA5/20 Cross anzeigen", value=False)
+    
+    tab1, tab2 = st.tabs(["🇺🇸 S&P 500 Auswertung", "🇪🇺 EuroStoxx Auswertung"])
+    all_strong_tickers = []
+    
+    with tab1:
+        for sector in long_matches:
+            st.subheader(f"Sektor: {sector} ({SECTOR_MAP[sector]})")
+            tickers_to_check = SP500_STOCKS.get(sector, [])
+            
+            if tickers_to_check:
+                with st.spinner(f"Scanne {len(tickers_to_check)} Aktien..."):
+                    df_stocks = analyze_stocks(tickers_to_check, apply_ema, rsl_limit)
+                    if not df_stocks.empty:
+                        st.dataframe(df_stocks, use_container_width=True)
+                        all_strong_tickers.extend(df_stocks['Ticker'].tolist())
+                    else:
+                        st.warning(f"Keine Aktie im Sektor {sector} erreicht aktuell einen RSL von {rsl_limit} (bzw. erfüllt den EMA-Filter).")
+
+    with tab2:
+        for sector in long_matches:
+            sector_name = SECTOR_MAP[sector]
+            st.subheader(f"Europa Sektor: {sector_name}")
+            eu_tickers = EUROSTOXX_STOCKS.get(sector_name, [])
+            
+            if eu_tickers:
+                with st.spinner(f"Scanne {len(eu_tickers)} europäische Aktien..."):
+                    df_eu = analyze_stocks(eu_tickers, apply_ema, rsl_limit)
+                    if not df_eu.empty:
+                        st.dataframe(df_eu, use_container_width=True)
+                        all_strong_tickers.extend(df_eu['Ticker'].tolist())
+                    else:
+                        st.warning(f"Keine Aktie im Sektor {sector_name} erreicht aktuell einen RSL von {rsl_limit} (bzw. erfüllt den EMA-Filter).")
+
+    # TradingView Export
+    st.markdown("---")
+    st.subheader("📺 TradingView Export")
+    if all_strong_tickers:
+        st.code(",".join(all_strong_tickers), language="text")
+        st.caption("Kopiere diese Zeile und füge sie direkt per STRG+V in deine TradingView Watchlist ein.")
