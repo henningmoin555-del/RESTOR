@@ -2,9 +2,6 @@ import streamlit as st
 import yfinance as yf
 import pandas as pd
 import numpy as np
-import google.generativeai as genai
-import json
-from PIL import Image
 
 # --- Konfiguration & Konstanten ---
 st.set_page_config(page_title="RESTOR Trading Terminal", page_icon="📈", layout="wide")
@@ -94,11 +91,9 @@ def analyze_stocks(tickers, apply_ema_filter, rsl_threshold):
         sma_130 = series.rolling(window=130).mean().iloc[-1]
         rsl = current_price / sma_130 if sma_130 > 0 else 0
         
-        # 1. Dynamischer RSL-Filter
         if rsl < rsl_threshold:
             continue
             
-        # 2. EMA Logik (Wird immer berechnet, aber nur gefiltert wenn Checkbox aktiv)
         ema5 = series.ewm(span=5, adjust=False).mean()
         ema20 = series.ewm(span=20, adjust=False).mean()
         
@@ -110,7 +105,6 @@ def analyze_stocks(tickers, apply_ema_filter, rsl_threshold):
             
         signal_text = "🔥 Frisches Cross" if has_fresh_cross else "-"
         
-        # Harter Filter greift nur, wenn Checkbox gesetzt ist
         if apply_ema_filter and not has_fresh_cross:
             continue
                 
@@ -127,79 +121,50 @@ def analyze_stocks(tickers, apply_ema_filter, rsl_threshold):
     return df
 
 def color_match(val):
-    if val == "Match 🟢": return 'background-color: rgba(0, 255, 0, 0.2)'
-    if val == "Match 🔴": return 'background-color: rgba(255, 0, 0, 0.2)'
-    if val == "Mismatch ⚠️": return 'background-color: rgba(255, 165, 0, 0.2)'
+    if isinstance(val, str):
+        if "Match 🟢" in val: return 'background-color: rgba(0, 255, 0, 0.2)'
+        if "Match 🔴" in val: return 'background-color: rgba(255, 0, 0, 0.2)'
+        if "Mismatch ⚠️" in val: return 'background-color: rgba(255, 165, 0, 0.2)'
     return ''
+
+def display_styled_dataframe(df):
+    """Sicheres Einfärben der Tabelle, egal welche Pandas Version installiert ist."""
+    if df.empty:
+        st.write("Keine Daten vorhanden.")
+        return
+    try:
+        st.dataframe(df.style.map(color_match, subset=['Status']), use_container_width=True)
+    except AttributeError:
+        st.dataframe(df.style.applymap(color_match, subset=['Status']), use_container_width=True)
 
 # --- UI Aufbau ---
 st.title("🖥️ RESTOR Trading Terminal (v6.1 & v7.1)")
 st.markdown("**Regelwerk:** 4h-Chart Ausführung | 1d-Filterung | 0,5 % Risiko pro Trade")
 
-# Sidebar für API Key
-st.sidebar.header("🔑 KI-Konfiguration")
-api_key = st.sidebar.text_input("Gemini API Key (für Auto-Scan)", type="password", help="Hole dir einen kostenlosen Key bei Google AI Studio, um die Tabelle direkt auszulesen.")
-
-st.markdown("---")
-
 # SCHRITT 1: Sektor RSL
+st.markdown("---")
 st.header("Schritt 1: Sektor-RSL Analyse")
 df_sectors = fetch_sector_rsl()
 st.dataframe(df_sectors, use_container_width=True)
 
-# SCHRITT 2: Screenshot & Autopilot-Abgleich
+# SCHRITT 2: Manueller Abgleich
 st.markdown("---")
-st.header("Schritt 2: Screenshot-Abgleich & Signalvalidierung")
-st.markdown("Lade deinen Screenshot der Marktstruktur-Tabelle hoch. Die KI liest die Werte aus der Spalte 'T-S' automatisch aus.")
+st.header("Schritt 2: Signalvalidierung (Manuell)")
+st.markdown("Trage hier die Werte (Long/Short/Neutral) aus deiner Marktstruktur-Tabelle ein.")
 
-col_upload, col_match = st.columns([1, 1.5])
-screenshot_signals = {}
+match_data = df_sectors.copy()
+# Standardwert für das Dropdown
+match_data['T-S (Manuell)'] = "Neutral"
 
-with col_upload:
-    uploaded_file = st.file_uploader("Screenshot hochladen", type=['png', 'jpg', 'jpeg'])
-    if uploaded_file is not None:
-        img = Image.open(uploaded_file)
-        st.image(img, caption="Hochgeladene Marktstruktur-Tabelle", use_container_width=True)
-        
-        # KI-gestützte Tabellen-Erkennung starten
-        if api_key:
-            with st.spinner("🤖 Scanne Tabelle (Spalte T-S)..."):
-                try:
-                    genai.configure(api_key=api_key)
-                    model = genai.GenerativeModel('gemini-1.5-flash')
-                    
-                    prompt = """
-                    Analysiere diesen Screenshot einer Trading-Tabelle. Suche in den Zeilen nach den 11 US-Sektor-Kürzeln (XLK, XLF, XLI, XLB, XLE, XLY, XLP, XLV, XLU, XLC, XLRE).
-                    Lies für jeden gefundenen Sektor den entsprechenden Wert aus der Spalte "T-S" ab. 
-                    Die Werte sind entweder "Long" (grün hinterlegt), "Short" (rot hinterlegt) oder "Neutral" (grau hinterlegt).
+col_edit, col_result = st.columns([1, 1.5])
 
-                    Gib das Ergebnis AUSSCHLIESSLICH als valides JSON-Objekt zurück. Keine Erklärungen, kein Markdown. 
-                    Beispiel-Format:
-                    {"XLK": "Long", "XLF": "Short", "XLU": "Neutral"}
-                    """
-                    
-                    response = model.generate_content([prompt, img])
-                    clean_text = response.text.replace("```json", "").replace("```", "").strip()
-                    screenshot_signals = json.loads(clean_text)
-                    st.success("🤖 Auto-Scan erfolgreich abgeschlossen!")
-                except Exception as e:
-                    st.error(f"Fehler beim KI-Scan: {e}. Verwende das manuelle Override in der Tabelle rechts.")
-
-with col_match:
-    st.markdown("**Abgleich-Matrix (Vollautomatisch durch KI gefüllt oder manuell anpassbar)**")
-    
-    match_data = df_sectors.copy()
-    
-    def get_detected_signal(row):
-        return screenshot_signals.get(row['Sektor'], "Neutral")
-        
-    match_data['Screenshot Markierung'] = match_data.apply(get_detected_signal, axis=1)
-    
+with col_edit:
+    st.markdown("**Eingabemaske**")
     edited_df = st.data_editor(
-        match_data[['Sektor', 'Name', 'RSL Signal', 'Screenshot Markierung']],
+        match_data[['Sektor', 'Name', 'RSL Signal', 'T-S (Manuell)']],
         column_config={
-            "Screenshot Markierung": st.column_config.SelectboxColumn(
-                "Screenshot Markierung",
+            "T-S (Manuell)": st.column_config.SelectboxColumn(
+                "T-S (Manuell)",
                 options=["Long", "Short", "Neutral"],
                 required=True,
             )
@@ -208,9 +173,11 @@ with col_match:
         key="screenshot_editor"
     )
 
+with col_result:
+    # Berechne Matches
     conditions = [
-        (edited_df['RSL Signal'] == 'Long') & (edited_df['Screenshot Markierung'] == 'Long'),
-        (edited_df['RSL Signal'] == 'Short') & (edited_df['Screenshot Markierung'] == 'Short')
+        (edited_df['RSL Signal'] == 'Long') & (edited_df['T-S (Manuell)'] == 'Long'),
+        (edited_df['RSL Signal'] == 'Short') & (edited_df['T-S (Manuell)'] == 'Short')
     ]
     choices = ['Match 🟢', 'Match 🔴']
     edited_df['Status'] = np.select(conditions, choices, default='Mismatch ⚠️')
@@ -220,4 +187,8 @@ with col_match:
     
     st.markdown("### 🎯 Trade-Freigaben (Matches)")
     if not df_matches.empty:
-        st.dataframe(df_matches.style.map(color_match, subset=['Status']), use_container_width=True)
+        display_styled_dataframe(df_matches)
+    else:
+        st.warning("Noch keine perfekten Matches gefunden. Kapital schützen.")
+        
+    st.markdown("
