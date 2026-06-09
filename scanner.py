@@ -9,7 +9,7 @@ from PIL import Image
 # --- Konfiguration & Konstanten ---
 st.set_page_config(page_title="RESTOR Trading Terminal", page_icon="📈", layout="wide")
 
-# Interne Sektor-Datenbanken für Einzelaktien
+# Interne Sektor-Datenbanken für Einzelaktien (Erweitere diese nach Belieben)
 SP500_STOCKS = {
     "XLK": ["AAPL", "MSFT", "NVDA", "AVGO", "ADBE", "CRM", "AMD", "INTC", "CSCO", "QCOM", "TXN", "IBM", "AMAT", "NOW", "INTU"],
     "XLF": ["BRK-B", "JPM", "V", "MA", "BAC", "WFC", "SPGI", "GS", "MS", "AXP", "C", "BLK", "CB", "PGR", "MMC"],
@@ -73,7 +73,7 @@ def fetch_sector_rsl():
     return pd.DataFrame(results).sort_values(by="RSL", ascending=False)
 
 @st.cache_data(ttl=3600)
-def analyze_stocks(tickers, apply_ema_filter):
+def analyze_stocks(tickers, apply_ema_filter, rsl_threshold):
     if not tickers:
         return pd.DataFrame()
     
@@ -94,27 +94,32 @@ def analyze_stocks(tickers, apply_ema_filter):
         sma_130 = series.rolling(window=130).mean().iloc[-1]
         rsl = current_price / sma_130 if sma_130 > 0 else 0
         
-        if rsl < 1.10:
+        # 1. Dynamischer RSL-Filter
+        if rsl < rsl_threshold:
             continue
             
-        passed_ema = True
-        if apply_ema_filter:
-            ema5 = series.ewm(span=5, adjust=False).mean()
-            ema20 = series.ewm(span=20, adjust=False).mean()
+        # 2. EMA Logik (Wird immer berechnet, aber nur gefiltert wenn Checkbox aktiv)
+        ema5 = series.ewm(span=5, adjust=False).mean()
+        ema20 = series.ewm(span=20, adjust=False).mean()
+        
+        has_fresh_cross = False
+        if len(ema5) >= 4:
+            today_bullish = ema5.iloc[-1] > ema20.iloc[-1]
+            past_bearish = ema5.iloc[-4] <= ema20.iloc[-4]
+            has_fresh_cross = today_bullish and past_bearish
             
-            if len(ema5) >= 4:
-                today_bullish = ema5.iloc[-1] > ema20.iloc[-1]
-                past_bearish = ema5.iloc[-4] <= ema20.iloc[-4]
-                passed_ema = today_bullish and past_bearish
-            else:
-                passed_ema = False
+        signal_text = "🔥 Frisches Cross" if has_fresh_cross else "-"
+        
+        # Harter Filter greift nur, wenn Checkbox gesetzt ist
+        if apply_ema_filter and not has_fresh_cross:
+            continue
                 
-        if passed_ema:
-            results.append({
-                "Ticker": ticker,
-                "Kurs": round(current_price, 2),
-                "RSL": round(rsl, 3)
-            })
+        results.append({
+            "Ticker": ticker,
+            "Kurs ($)": round(current_price, 2),
+            "RSL": round(rsl, 3),
+            "EMA 5/20 Signal": signal_text
+        })
             
     df = pd.DataFrame(results)
     if not df.empty:
@@ -133,7 +138,7 @@ st.markdown("**Regelwerk:** 4h-Chart Ausführung | 1d-Filterung | 0,5 % Risiko p
 
 # Sidebar für API Key
 st.sidebar.header("🔑 KI-Konfiguration")
-api_key = st.sidebar.text_input("Gemini API Key (für Auto-Scan)", type="password", help="Hole dir einen kostenlosen Key bei Google AI Studio, um Screenshots direkt auszulesen.")
+api_key = st.sidebar.text_input("Gemini API Key (für Auto-Scan)", type="password", help="Hole dir einen kostenlosen Key bei Google AI Studio, um die Tabelle direkt auszulesen.")
 
 st.markdown("---")
 
@@ -145,7 +150,7 @@ st.dataframe(df_sectors, use_container_width=True)
 # SCHRITT 2: Screenshot & Autopilot-Abgleich
 st.markdown("---")
 st.header("Schritt 2: Screenshot-Abgleich & Signalvalidierung")
-st.markdown("Lade deinen Screenshot hoch. Die App scannt die farbigen Kennzeichnungen (Rot/Grün/Gelb) vor den Sektoren automatisch.")
+st.markdown("Lade deinen Screenshot der Marktstruktur-Tabelle hoch. Die KI liest die Werte aus der Spalte 'T-S' automatisch aus.")
 
 col_upload, col_match = st.columns([1, 1.5])
 screenshot_signals = {}
@@ -154,24 +159,22 @@ with col_upload:
     uploaded_file = st.file_uploader("Screenshot hochladen", type=['png', 'jpg', 'jpeg'])
     if uploaded_file is not None:
         img = Image.open(uploaded_file)
-        st.image(img, caption="Hochgeladener Marktstruktur-Sektor-Chart", use_container_width=True)
+        st.image(img, caption="Hochgeladene Marktstruktur-Tabelle", use_container_width=True)
         
-        # KI-gestützte Farberkennung starten
+        # KI-gestützte Tabellen-Erkennung starten
         if api_key:
-            with st.spinner("🤖 Scanne Farbkennzeichnungen im Screenshot..."):
+            with st.spinner("🤖 Scanne Tabelle (Spalte T-S)..."):
                 try:
                     genai.configure(api_key=api_key)
                     model = genai.GenerativeModel('gemini-1.5-flash')
                     
                     prompt = """
-                    Analysiere diesen Trading-Screenshot. Vor den US-Sektor-Namen oder Kürzeln (XLK, XLF, XLC, XLY, XLV, XLI, XLP, XLE, XLB, XLRE, XLU) 
-                    befinden sich farbige visuelle Kennzeichnungen (Punkte, Quadrate oder Textmarker in Grün, Rot oder Gelb/Grau/Neutral).
-                    Bestimme für jeden Sektor die Farbe der Markierung:
-                    - Grün bedeutet "Long"
-                    - Rot bedeutet "Short"
-                    - Gelb, Grau oder keine Markierung bedeutet "Neutral"
-                    
-                    Gib das Ergebnis AUSSCHLIESSLICH als valides JSON-Objekt zurück. Keine Erklärungen, kein Markdown. Beispiel-Format:
+                    Analysiere diesen Screenshot einer Trading-Tabelle. Suche in den Zeilen nach den 11 US-Sektor-Kürzeln (XLK, XLF, XLI, XLB, XLE, XLY, XLP, XLV, XLU, XLC, XLRE).
+                    Lies für jeden gefundenen Sektor den entsprechenden Wert aus der Spalte "T-S" ab. 
+                    Die Werte sind entweder "Long" (grün hinterlegt), "Short" (rot hinterlegt) oder "Neutral" (grau hinterlegt).
+
+                    Gib das Ergebnis AUSSCHLIESSLICH als valides JSON-Objekt zurück. Keine Erklärungen, kein Markdown. 
+                    Beispiel-Format:
                     {"XLK": "Long", "XLF": "Short", "XLU": "Neutral"}
                     """
                     
@@ -180,12 +183,11 @@ with col_upload:
                     screenshot_signals = json.loads(clean_text)
                     st.success("🤖 Auto-Scan erfolgreich abgeschlossen!")
                 except Exception as e:
-                    st.error(f"Fehler beim KI-Scan: {e}. Verwende das manuelle Override.")
+                    st.error(f"Fehler beim KI-Scan: {e}. Verwende das manuelle Override in der Tabelle rechts.")
 
 with col_match:
     st.markdown("**Abgleich-Matrix (Vollautomatisch durch KI gefüllt oder manuell anpassbar)**")
     
-    # Vorbereitung der Tabelle mit den erkannten Werten
     match_data = df_sectors.copy()
     
     def get_detected_signal(row):
@@ -193,7 +195,6 @@ with col_match:
         
     match_data['Screenshot Markierung'] = match_data.apply(get_detected_signal, axis=1)
     
-    # Nutzer kann Ergebnisse im Editor verfeinern, falls die KI mal daneben liegt
     edited_df = st.data_editor(
         match_data[['Sektor', 'Name', 'RSL Signal', 'Screenshot Markierung']],
         column_config={
@@ -207,7 +208,6 @@ with col_match:
         key="screenshot_editor"
     )
 
-    # Berechne Matches (Nur Grün-Grün oder Rot-Rot ist valide)
     conditions = [
         (edited_df['RSL Signal'] == 'Long') & (edited_df['Screenshot Markierung'] == 'Long'),
         (edited_df['RSL Signal'] == 'Short') & (edited_df['Screenshot Markierung'] == 'Short')
@@ -215,81 +215,9 @@ with col_match:
     choices = ['Match 🟢', 'Match 🔴']
     edited_df['Status'] = np.select(conditions, choices, default='Mismatch ⚠️')
     
-    # Aufteilung in zwei übersichtliche Tabellen (Matches vs Mismatches)
     df_matches = edited_df[edited_df['Status'].str.contains('Match')]
     df_mismatches = edited_df[edited_df['Status'] == 'Mismatch ⚠️']
     
     st.markdown("### 🎯 Trade-Freigaben (Matches)")
     if not df_matches.empty:
         st.dataframe(df_matches.style.map(color_match, subset=['Status']), use_container_width=True)
-    else:
-        st.warning("Keine perfekten Matches gefunden. Kapital schützen.")
-        
-    st.markdown("### ❌ Unstimmigkeiten (Mismatches)")
-    st.dataframe(df_mismatches.style.map(color_match, subset=['Status']), use_container_width=True)
-
-# SCHRITT 3: Einzelaktien Deep Dive
-st.markdown("---")
-st.header("Schritt 3: Einzelaktien Deep Dive (RSL > 1.10)")
-
-long_matches = edited_df[edited_df['Status'] == 'Match 🟢']['Sektor'].tolist()
-
-if not long_matches:
-    st.info("Warte auf bestätigte 'Match 🟢' Sektoren aus Schritt 2, um den Aktien-Scan zu starten.")
-else:
-    st.success(f"Starte High-Momentum-Scan für Sektoren: {', '.join(long_matches)}")
-    
-    apply_ema = st.checkbox("🔥 Frisches Signal: EMA5 kreuzte EMA20 in den letzten 3 Tagen", value=False)
-    
-    tab1, tab2 = st.tabs(["🇺🇸 S&P 500 Auswertung", "🇪🇺 EuroStoxx Auswertung"])
-    all_strong_tickers = []
-    
-    with tab1:
-        for sector in long_matches:
-            st.subheader(f"Sektor: {sector} ({SECTOR_MAP[sector]})")
-            tickers_to_check = SP500_STOCKS.get(sector, [])
-            
-            if tickers_to_check:
-                with st.spinner(f"Scanne {len(tickers_to_check)} Aktien..."):
-                    df_stocks = analyze_stocks(tickers_to_check, apply_ema)
-                    if not df_stocks.empty:
-                        st.dataframe(df_stocks, use_container_width=True)
-                        all_strong_tickers.extend(df_stocks['Ticker'].tolist())
-                    else:
-                        st.write("Keine Aktie erfüllt die Kriterien (RSL > 1.10 / EMA-Kreuzung).")
-
-    with tab2:
-        for sector in long_matches:
-            sector_name = SECTOR_MAP[sector]
-            st.subheader(f"Europa Sektor: {sector_name}")
-            eu_tickers = EUROSTOXX_STOCKS.get(sector_name, [])
-            
-            if eu_tickers:
-                with st.spinner(f"Scanne {len(eu_tickers)} europäische Aktien..."):
-                    df_eu = analyze_stocks(eu_tickers, apply_ema)
-                    if not df_eu.empty:
-                        st.dataframe(df_eu, use_container_width=True)
-                        all_strong_tickers.extend(df_eu['Ticker'].tolist())
-                    else:
-                        st.write("Keine Aktie erfüllt die Kriterien.")
-            else:
-                st.write("Keine europäische Watchlist für diesen Sektor hinterlegt.")
-
-    # TradingView Export
-    st.markdown("---")
-    st.subheader("📺 TradingView Export")
-    if all_strong_tickers:
-        tv_string = ",".join(all_strong_tickers)
-        st.code(tv_string, language="text")
-        st.caption("Kopiere diese Zeile und füge sie direkt per STRG+V in deine TradingView Watchlist ein.")
-    else:
-        st.write("Keine starken Aktien im Filter.")
-
-# --- Quellen & Fußzeile ---
-st.markdown("---")
-st.markdown("""
-**Quellen & Datenbasis:**
-* **Kursdaten & Indikatoren:** Yahoo Finance (`yfinance` API). Auswertung auf Basis von Tagesendkursen (1d). 
-* **Screenshot-Klassifizierung:** Bildanalyse über die Gemini-Vision-Schnittstelle zur Erkennung der Farbmarker (Rot/Grün/Gelb) für die Marktstruktur.
-* **Filterregeln:** Harter RSL-Schwellenwert von > 1.10 auf Einzelaktienebene zur Selektion von Outperformern.
-""")
