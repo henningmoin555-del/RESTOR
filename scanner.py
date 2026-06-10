@@ -153,6 +153,11 @@ st.header("Schritt 1: Sektor-RSL Analyse")
 df_sectors = fetch_sector_rsl()
 display_styled_dataframe(df_sectors)
 
+# Button zum Aktualisieren der Live-Daten
+if st.button("🔄 Live-Daten jetzt aktualisieren"):
+    st.cache_data.clear()
+    st.rerun()
+
 # SCHRITT 2: Manueller Abgleich
 st.markdown("---")
 st.header("Schritt 2: Sektortrend hinterlegen (Höhere Hochs / Höhere Tiefs)")
