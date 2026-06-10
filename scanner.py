@@ -134,4 +134,4 @@ def analyze_stocks(tickers, apply_ema_filter, rsl_threshold):
             continue
             
         ema5 = series.ewm(span=5, adjust=False).mean()
-        ema20 = series.ewm(span=20, adjust
+       ema20 = series.ewm(span=20, adjust=False).mean()
