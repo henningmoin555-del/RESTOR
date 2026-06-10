@@ -221,8 +221,9 @@ col_edit, col_result = st.columns([1, 1.5])
 
 with col_edit:
     st.markdown("**Eingabemaske**")
-    edited_df = st.data_editor(
-        match_data[['Sektor', 'Name', 'RSL Signal', 'T-S (Manuell)']],
+    # Nur Sektor, Name und das manuelle Feld anzeigen
+    edited_df_view = st.data_editor(
+        match_data[['Sektor', 'Name', 'T-S (Manuell)']],
         column_config={
             "T-S (Manuell)": st.column_config.SelectboxColumn(
                 "T-S (Manuell)",
@@ -235,6 +236,9 @@ with col_edit:
     )
 
 with col_result:
+    # Das RSL Signal für die Status-Berechnung im Hintergrund wieder anfügen
+    edited_df = edited_df_view.merge(match_data[['Sektor', 'RSL Signal']], on='Sektor', how='left')
+    
     conditions = [
         (edited_df['RSL Signal'] == 'Long') & (edited_df['T-S (Manuell)'] == 'Long'),
         (edited_df['RSL Signal'] == 'Short') & (edited_df['T-S (Manuell)'] == 'Short')
@@ -242,8 +246,10 @@ with col_result:
     choices = ['Match 🟢', 'Match 🔴']
     edited_df['Status'] = np.select(conditions, choices, default='Mismatch ⚠️')
     
-    df_matches = edited_df[edited_df['Status'].str.contains('Match')]
-    df_mismatches = edited_df[edited_df['Status'] == 'Mismatch ⚠️']
+    # Spaltenordnung für die Ergebnistabellen anpassen, damit das RSL Signal dort wieder sichtbar ist
+    result_columns = ['Sektor', 'Name', 'RSL Signal', 'T-S (Manuell)', 'Status']
+    df_matches = edited_df[edited_df['Status'].str.contains('Match')][result_columns]
+    df_mismatches = edited_df[edited_df['Status'] == 'Mismatch ⚠️'][result_columns]
     
     st.markdown("### 🎯 Trade-Freigaben (Matches)")
     if not df_matches.empty:
