@@ -4,21 +4,21 @@ import pandas as pd
 import numpy as np
 
 # --- Konfiguration & Konstanten ---
-st.set_page_config(page_title="RESTOR Trading Terminal", page_icon="📈", layout="wide")
+st.set_page_config(page_title="Sektor Trading Terminal", page_icon="📈", layout="wide")
 
 # Interne Sektor-Datenbanken für Einzelaktien
 SP500_AKTIEN = {
-    "XLK": ["AAPL", "MSFT", "NVDA", "AVGO", "ADBE", "CRM", "AMD", "INTC", "CSCO", "QCOM", "TXN", "IBM", "AMAT", "NOW", "INTU", "ORCL", "PANW", "MU", "LRCX", "KLAC"],
-    "XLF": ["BRK-B", "JPM", "V", "MA", "BAC", "WFC", "SPGI", "GS", "MS", "AXP", "C", "BLK", "CB", "PGR", "MMC", "SCHW", "CME", "AON", "ICE", "USB"],
-    "XLC": ["META", "GOOGL", "NFLX", "TMUS", "CHTR", "DIS", "EA", "TTWO", "CMCSA", "VZ", "T", "WBD", "OMC", "IPG", "LYV", "FOXA", "NWSA"],
-    "XLY": ["AMZN", "TSLA", "HD", "MCD", "LOW", "NKE", "SBUX", "TJX", "ORLY", "BKNG", "MAR", "GM", "F", "CMG", "LVS", "RCL", "HLT", "EBAY", "ROST", "YUM"],
-    "XLV": ["LLY", "UNH", "JNJ", "ABBV", "MRK", "TMO", "ABT", "PFE", "AMGN", "DHR", "ISRG", "SYK", "BMY", "CVS", "CI", "BSX", "MDT", "EW", "VRTX", "ZTS"],
-    "XLI": ["GE", "CAT", "UNP", "HON", "ETN", "WM", "FDX", "UPS", "LMT", "RTX", "BA", "DE", "CSX", "NSC", "GWW", "EMR", "ROP", "PH", "PCAR", "TT"],
-    "XLP": ["PG", "COST", "WMT", "KO", "PEP", "PM", "MO", "CL", "TGT", "EL", "KMB", "GIS", "HSY", "KR", "K", "CHD", "SYY", "STZ", "ADM", "MDLZ"],
-    "XLE": ["XOM", "CVX", "COP", "EOG", "SLB", "MPC", "PSX", "VLO", "OXY", "WMB", "KMI", "HES", "BKR", "HAL", "DVN", "FANG", "TRGP", "CTRA", "MRO"],
-    "XLB": ["LIN", "APD", "SHW", "FCX", "ECL", "NEM", "DOW", "NUE", "CTVA", "DD", "VMC", "MLM", "ALB", "CE", "EMN", "FMC", "CF", "MOS"],
-    "XLRE": ["PLD", "AMT", "CCI", "EQIX", "PSA", "O", "SPG", "WELL", "DLR", "CSGP", "AVB", "EQR", "VTR", "ARE", "EXR", "INVH", "BXP"],
-    "XLU": ["NEE", "SO", "DUK", "CEG", "SRE", "AEP", "D", "EXC", "XEL", "ED", "PEG", "WEC", "AWK", "ETR", "FE", "EIX", "PPL"]
+    "XLK": ["AAPL", "MSFT", "NVDA", "AVGO", "ORCL", "CRM", "AMD", "ADBE", "CSCO", "INTC", "TXN", "QCOM", "INTU", "IBM", "AMAT", "NOW", "LRCX", "MU", "PANW", "KLAC", "ADI", "ROP", "TEL", "HPQ", "STX", "WDC", "FTNT", "ANET", "CDW", "CDNS", "SNPS", "APH", "GLW", "MSI", "SMCI", "TYL", "PTC", "FICO", "TER", "ANSS", "MCHP", "ON", "NTAP", "AKAM", "JNPR", "TRMB", "FFIV", "SWKS", "QRVO", "MPWR", "ENPH", "SEDG"],
+    "XLF": ["BRK-B", "JPM", "V", "MA", "BAC", "WFC", "GS", "MS", "C", "AXP", "SPGI", "BX", "CB", "MMC", "PGR", "CME", "SCHW", "BLK", "AON", "ICE", "FI", "USB", "PNC", "TFC", "COF", "BK", "AIG", "TRV", "MET", "PRU", "AFL", "ALL", "DFS", "SYF", "STT", "NTRS", "MTMT", "AMP", "FITB", "MTB", "HBAN", "RF", "CFG", "KEY", "CMA", "ZION"],
+    "XLC": ["META", "GOOGL", "GOOG", "NFLX", "DIS", "CMCSA", "VZ", "T", "CHTR", "TMUS", "ATVI", "EA", "TTWO", "WBD", "FOXA", "FOX", "PARA", "OMC", "IPG", "LYV", "MTCH", "NWSA", "NWS", "LBRDA"],
+    "XLY": ["AMZN", "TSLA", "HD", "MCD", "NKE", "SBUX", "LOW", "BKNG", "TJX", "CMG", "MAR", "HLT", "ORLY", "AZO", "TSCO", "F", "GM", "DHI", "LEN", "ROST", "LVS", "EXPE", "RCL", "CCL", "YUM", "DRI", "KMX", "EBAY", "ETSY", "HAS", "MAT", "APTV", "BWA", "LKQ", "GPC", "DVA", "PHM", "NVR", "POOL", "GRMN"],
+    "XLV": ["LLY", "UNH", "JNJ", "ABBV", "MRK", "TMO", "DHR", "ABT", "PFE", "AMGN", "ISRG", "SYK", "BSY", "VRTX", "BSX", "ZTS", "CI", "CVS", "GILD", "BDX", "HUM", "MCK", "MTD", "ALGN", "IDXX", "RMD", "DXCM", "EW", "HCA", "A", "CAH", "BIIB", "ILMN", "STE", "WST", "COO", "HOLX", "BAX", "ZBH", "COR", "INCY", "VTRS", "CRL", "XRAY"],
+    "XLI": ["CAT", "GE", "RTX", "LMT", "BA", "UNP", "UPS", "HON", "DE", "EMR", "ETN", "ITW", "NOC", "GD", "PH", "CMI", "PCAR", "ROK", "TT", "CARR", "OTIS", "URI", "CPRT", "FAST", "GWW", "FDX", "DAL", "UAL", "AAL", "LUV", "CSX", "NSC", "RSG", "WM", "CHRW", "EXPD", "JBHT", "ODFL", "R", "NDSN", "SNA", "SWK"],
+    "XLP": ["WMT", "PG", "COST", "KO", "PEP", "PM", "MO", "MDLZ", "TGT", "EL", "CL", "KMB", "GIS", "SYY", "K", "HSY", "KHC", "CHD", "CLX", "MKC", "CPB", "SJM", "TAP", "STZ", "MNST", "KR", "WBA", "DG", "DLTR", "TSN", "CAG", "LW"],
+    "XLE": ["XOM", "CVX", "COP", "EOG", "SLB", "MPC", "PSX", "VLO", "OXY", "WMB", "KMI", "HAL", "BKR", "HES", "DVN", "FANG", "CTRA", "TRGP", "MRO", "APA", "OKE", "EQT", "CHK"],
+    "XLB": ["LIN", "SHW", "ECL", "APD", "NEM", "FCX", "DOW", "DD", "CTVA", "NUE", "VMC", "MLM", "ALB", "FMC", "CE", "EMN", "IFF", "PPG", "CF", "MOS", "STLD", "PKG", "WRK", "IP", "AMCR", "BALL", "SEE"],
+    "XLRE": ["PLD", "AMT", "EQIX", "WELL", "SPG", "PSA", "O", "DLR", "CSGP", "CCI", "VICI", "CBRE", "AVB", "EQR", "EXR", "ARE", "INVH", "MAA", "UDR", "BXP", "HST", "IRM", "KIM", "REG", "VTR", "WY", "CPT", "ESS"],
+    "XLU": ["NEE", "SO", "DUK", "SRE", "AEP", "D", "EXC", "XEL", "ED", "WEC", "PEG", "AWK", "EIX", "ETR", "FE", "PPL", "CMS", "AEE", "LNT", "NI", "PNW", "CNP", "ES", "EVRG", "ATO", "NRG", "VST"]
 }
 
 EUROSTOXX_AKTIEN = {
