@@ -163,4 +163,172 @@ def color_cells(val):
     """Zentrale Farblogik für Long, Short, Neutral und Matches."""
     if isinstance(val, str):
         if val == "Long" or "Match 🟢" in val:
-            return '
+            return 'background-color: rgba(0, 255, 0, 0.2)'
+        elif val == "Short" or "Match 🔴" in val:
+            return 'background-color: rgba(255, 0, 0, 0.2)'
+        elif val == "Neutral":
+            return 'background-color: rgba(255, 255, 0, 0.2)'
+        elif "Mismatch ⚠️" in val:
+            return 'background-color: rgba(255, 165, 0, 0.2)'
+    return ''
+
+def display_styled_dataframe(df):
+    """Sicheres Einfärben der gesamten Tabelle, egal welche Pandas Version installiert ist."""
+    if df.empty:
+        st.write("Keine Daten vorhanden (Eventuell Verbindungsfehler zu Yahoo Finance).")
+        return
+    try:
+        st.dataframe(df.style.map(color_cells), use_container_width=True)
+    except AttributeError:
+        st.dataframe(df.style.applymap(color_cells), use_container_width=True)
+
+# --- UI Aufbau ---
+st.title("🖥️ RESTOR Trading Terminal (v6.1 & v7.1)")
+st.markdown("**Regelwerk:** 4h-Chart Ausführung | 1d-Filterung | 0,5 % Risiko pro Trade")
+
+# SCHRITT 1: Sektor RSL
+st.markdown("---")
+st.header("Schritt 1: Sektor-RSL Analyse")
+
+col_t1, col_t_empty = st.columns([1.5, 1])
+
+with col_t1:
+    df_sectors = fetch_sector_rsl()
+    if not df_sectors.empty:
+        display_styled_dataframe(df_sectors)
+    else:
+        st.warning("Ladefehler: Bitte versuche es mit dem Button unten erneut.")
+        
+    if st.button("🔄 Live-Daten jetzt aktualisieren"):
+        st.cache_data.clear()
+        st.rerun()
+
+# SCHRITT 2: Manueller Abgleich
+st.markdown("---")
+st.header("Schritt 2: Sektortrend hinterlegen (Höhere Hochs / Höhere Tiefs)")
+st.markdown("Trage hier die Werte (Long/Short/Neutral) aus deiner Marktstruktur-Tabelle ein.")
+
+if not df_sectors.empty:
+    match_data = df_sectors.copy()
+else:
+    match_data = pd.DataFrame([{"Sektor": k, "Name": v, "RSL Signal": "Neutral"} for k, v in SECTOR_MAP.items()])
+
+match_data['T-S (Manuell)'] = "Neutral"
+
+col_edit, col_result = st.columns([1, 1.5])
+
+with col_edit:
+    st.markdown("**Eingabemaske**")
+    edited_df_view = st.data_editor(
+        match_data[['Sektor', 'Name', 'T-S (Manuell)']],
+        column_config={
+            "T-S (Manuell)": st.column_config.SelectboxColumn(
+                "T-S (Manuell)",
+                options=["Long", "Short", "Neutral"],
+                required=True,
+            )
+        },
+        use_container_width=True,
+        key="screenshot_editor"
+    )
+
+with col_result:
+    edited_df = edited_df_view.merge(match_data[['Sektor', 'RSL Signal']], on='Sektor', how='left')
+    
+    conditions = [
+        (edited_df['RSL Signal'] == 'Long') & (edited_df['T-S (Manuell)'] == 'Long'),
+        (edited_df['RSL Signal'] == 'Short') & (edited_df['T-S (Manuell)'] == 'Short')
+    ]
+    choices = ['Match 🟢', 'Match 🔴']
+    edited_df['Status'] = np.select(conditions, choices, default='Mismatch ⚠️')
+    
+    result_columns = ['Sektor', 'Name', 'RSL Signal', 'T-S (Manuell)', 'Status']
+    df_matches = edited_df[edited_df['Status'].str.contains('Match')][result_columns]
+    df_mismatches = edited_df[edited_df['Status'] == 'Mismatch ⚠️'][result_columns]
+    
+    st.markdown("### 🎯 Trade-Freigaben (Matches)")
+    if not df_matches.empty:
+        display_styled_dataframe(df_matches)
+    else:
+        st.warning("Noch keine perfekten Matches gefunden. Kapital schützen.")
+        
+    st.markdown("### ❌ Unstimmigkeiten (Mismatches)")
+    display_styled_dataframe(df_mismatches)
+
+# --- SCHRITT 3: Einzelaktien Deep Dive ---
+st.markdown("---")
+st.header("Schritt 3: Einzelaktien Deep Dive")
+
+long_matches = edited_df[edited_df['Status'] == 'Match 🟢']['Sektor'].tolist()
+
+if not long_matches:
+    st.info("Warte auf bestätigte 'Match 🟢' Sektoren aus Schritt 2...")
+else:
+    st.success(f"Starte High-Momentum-Scan für: {', '.join(long_matches)}")
+    
+    col_f1, col_f2 = st.columns(2)
+    with col_f1:
+        rsl_limit = st.slider("Minimale Relative Stärke (RSL)", min_value=1.00, max_value=1.20, value=1.05, step=0.01, help="1.05 bedeutet, die Aktie notiert 5% über ihrem SMA 130.")
+    with col_f2:
+        st.write("") 
+        st.write("")
+        apply_ema = st.checkbox("Zwingend: Nur Aktien mit frischem EMA5/20 Cross anzeigen", value=False)
+    
+    tab1, tab2 = st.tabs(["🇺🇸 S&P 500 Auswertung", "🇪🇺 EuroStoxx Auswertung"])
+    
+    # Getrennte Listen für den Export
+    sp500_strong_tickers = []
+    euro_strong_tickers = []
+    
+    with tab1:
+        for sector in long_matches:
+            st.subheader(f"Sektor: {sector} ({SECTOR_MAP[sector]})")
+            tickers_to_check = SP500_AKTIEN.get(sector, [])
+            
+            if tickers_to_check:
+                with st.spinner(f"Scanne {len(tickers_to_check)} Aktien..."):
+                    df_stocks = analyze_stocks(tickers_to_check, apply_ema, rsl_limit)
+                    if not df_stocks.empty:
+                        st.dataframe(df_stocks, use_container_width=True)
+                        sp500_strong_tickers.extend(df_stocks['Ticker'].tolist())
+                    else:
+                        st.warning(f"Keine Aktie im Sektor {sector} erreicht aktuell einen RSL von {rsl_limit} (bzw. erfüllt den EMA-Filter).")
+
+    with tab2:
+        for sector in long_matches:
+            sector_name = SECTOR_MAP[sector]
+            st.subheader(f"Europa Sektor: {sector_name}")
+            eu_tickers = EUROSTOXX_AKTIEN.get(sector_name, [])
+            
+            if eu_tickers:
+                with st.spinner(f"Scanne {len(eu_tickers)} europäische Aktien..."):
+                    df_eu = analyze_stocks(eu_tickers, apply_ema, rsl_limit)
+                    if not df_eu.empty:
+                        st.dataframe(df_eu, use_container_width=True)
+                        euro_strong_tickers.extend(df_eu['Ticker'].tolist())
+                    else:
+                        st.warning(f"Keine Aktie im Sektor {sector_name} erreicht aktuell einen RSL von {rsl_limit} (bzw. erfüllt den EMA-Filter).")
+
+    # TradingView Export - Getrennt nach Märkten
+    st.markdown("---")
+    st.subheader("📺 TradingView Export")
+    st.caption("Kopiere diese Zeilen und füge sie direkt per STRG+V in deine TradingView Watchlists ein.")
+    
+    if sp500_strong_tickers or euro_strong_tickers:
+        col_tv1, col_tv2 = st.columns(2)
+        
+        with col_tv1:
+            st.markdown("**🇺🇸 S&P 500 Matches**")
+            if sp500_strong_tickers:
+                st.code(",".join(sp500_strong_tickers), language="text")
+            else:
+                st.info("Keine S&P 500 Ticker zum Exportieren.")
+                
+        with col_tv2:
+            st.markdown("**🇪🇺 EuroStoxx Matches**")
+            if euro_strong_tickers:
+                st.code(",".join(euro_strong_tickers), language="text")
+            else:
+                st.info("Keine EuroStoxx Ticker zum Exportieren.")
+    else:
+        st.info("Aktuell keine Ticker für den Export vorhanden.")
