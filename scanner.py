@@ -4,7 +4,7 @@ import pandas as pd
 import numpy as np
 
 # --- Konfiguration & Konstanten ---
-st.set_page_config(page_title="RESTOR Trading Terminal", page_icon="📈", layout="wide")
+st.set_page_config(page_title="Sektorfilter Trading nach RSL / HH-HT", page_icon="📈", layout="wide")
 
 # Interne Sektor-Datenbanken für Einzelaktien
 SP500_AKTIEN = {
@@ -22,44 +22,52 @@ SP500_AKTIEN = {
 }
 
 EUROSTOXX_AKTIEN = {
-    "Technologie": ["ASML.AS", "SAP.DE", "INF.DE", "ASM.AS", "CAP.PA", "SU.PA", "BSEM.AS", "DSY.PA", "STM.MI", "NOKIA.HE"],
-    "Finanzen": ["SAN.MC", "BNP.PA", "ALV.DE", "INGA.AS", "ISP.MI", "MUV2.DE", "CS.PA", "BBVA.MC", "UCG.MI", "DBK.DE", "KBC.BR", "NDA-FI.HE"],
-    "Kommunikation": ["ORAN.PA", "DTE.DE", "VOD.L", "TEF.MC", "KPN.AS", "TIM.MI", "VIV.PA", "PROX.BR", "DNA.HE"],
-    "Zyklischer Konsum": ["RMS.PA", "LVMH.PA", "OR.PA", "BMW.DE", "MBG.DE", "VOW3.DE", "STE.PA", "IAG.MC", "PUM.DE", "CDI.PA", "ITX.MC", "RNO.PA"],
-    "Gesundheit": ["SAN.PA", "BAYN.DE", "MRK.DE", "UCB.BR", "FRE.DE", "QIA.DE", "EL.PA", "FME.DE", "SRG.MI"],
-    "Industrie": ["SIE.DE", "AIR.PA", "DHL.DE", "ALST.PA", "SU.PA", "SAF.PA", "DSY.PA", "VCI.PA", "HO.PA", "ENR.DE", "MTX.DE", "PRY.MI"],
-    "Basiskonsum": ["HEIA.AS", "BN.PA", "ULVR.L", "ABI.BR", "ABEA.DE", "BEI.DE", "CA.PA", "AH.AS", "KERRY.I"],
-    "Energie": ["TTE.PA", "ENI.MI", "REP.MC", "TEN.MI", "OMV.VI", "SHEL.AS", "GALP.LS", "NESTE.HE"],
-    "Materialien": ["BAS.DE", "CRH.L", "AI.PA", "SY1.DE", "MT.AS", "UPM.HE", "COV.DE", "HEI.DE", "DSM.AS", "SOLB.BR"],
-    "Immobilien": ["VNA.DE", "URW.AS", "LEG.DE", "AROUNDTOWN.DE", "ICAD.PA", "KLEIM.PA", "WDP.BR"],
-    "Versorger": ["IBE.MC", "ENEL.MI", "RWE.DE", "ENGIE.PA", "EOAN.DE", "EDP.LS", "ITRN.MI", "TER.MC", "FUM1V.HE"]
+    "Technologie": ["ASML.AS", "SAP.DE", "INF.DE", "ASM.AS", "CAP.PA", "SU.PA", "BSEM.AS", "DSY.PA", "STM.MI", "NOKIA.HE", "LOGN.SW", "TEMN.SW", "SOON.SW"],
+    "Finanzen": ["SAN.MC", "BNP.PA", "ALV.DE", "INGA.AS", "ISP.MI", "MUV2.DE", "CS.PA", "BBVA.MC", "UCG.MI", "DBK.DE", "KBC.BR", "NDA-FI.HE", "UBSG.SW", "ZURN.SW", "BARC.L", "HSBA.L", "LLOY.L", "NWG.L", "PRU.L", "AGN.AS", "CBK.DE", "SREN.SW", "SCB.L"],
+    "Kommunikation": ["ORAN.PA", "DTE.DE", "VOD.L", "TEF.MC", "KPN.AS", "TIM.MI", "VIV.PA", "PROX.BR", "DNA.HE", "ELISA.HE", "BT-A.L", "UMG.AS", "PUB.PA", "WPP.L", "INW.MI", "SGEF.PA"],
+    "Zyklischer Konsum": ["RMS.PA", "LVMH.PA", "OR.PA", "BMW.DE", "MBG.DE", "VOW3.DE", "STE.PA", "IAG.MC", "PUM.DE", "CDI.PA", "ITX.MC", "RNO.PA", "RACE.MI", "MONC.MI", "STLA.MI", "HMB.ST", "NXT.L", "PORS.DE", "PAH3.DE", "CFR.SW", "CPG.L", "ADS.DE", "JD.L"],
+    "Gesundheit": ["SAN.PA", "BAYN.DE", "MRK.DE", "UCB.BR", "FRE.DE", "QIA.DE", "EL.PA", "FME.DE", "SRG.MI", "NOVN.SW", "ROG.SW", "LONN.SW", "GSK.L", "AZN.L", "NOVO-B.CO", "ALC.SW", "SHL.DE", "COLO-B.CO", "HLN.L", "SNW.DE"],
+    "Industrie": ["SIE.DE", "AIR.PA", "DHL.DE", "ALST.PA", "SU.PA", "SAF.PA", "DSY.PA", "VCI.PA", "HO.PA", "ENR.DE", "MTX.DE", "PRY.MI", "ABB.SW", "VOLV-B.ST", "BAE.L", "DSV.CO", "KNIN.SW", "SGO.PA", "GEBN.SW", "EPI-A.ST", "SAND.ST", "ASSA-B.ST", "RTO.L", "RHM.DE"],
+    "Basiskonsum": ["HEIA.AS", "BN.PA", "ULVR.L", "ABI.BR", "ABEA.DE", "BEI.DE", "CA.PA", "AH.AS", "KERRY.I", "NESN.SW", "LIND.SW", "DGE.L", "BATS.L", "IMB.L", "RKT.L", "ORK.OL", "SALM.OL", "AD.AS", "AAK.ST"],
+    "Energie": ["TTE.PA", "ENI.MI", "REP.MC", "TEN.MI", "OMV.VI", "SHEL.AS", "GALP.LS", "NESTE.HE", "BP.L", "EQNR.OL", "SNAM.MI", "AKRBP.OL", "VWS.CO"],
+    "Materialien": ["BAS.DE", "CRH.L", "AI.PA", "SY1.DE", "MT.AS", "UPM.HE", "COV.DE", "HEI.DE", "DSM.AS", "SOLB.BR", "RIO.L", "GLEN.L", "AAL.L", "HOLN.SW", "SIKA.SW", "GIVN.SW", "STORAERV.HE", "NZYM-B.CO", "BHP.L", "AKZA.AS", "KNEBV.HE"],
+    "Immobilien": ["VNA.DE", "URW.AS", "LEG.DE", "AROUNDTOWN.DE", "ICAD.PA", "KLEIM.PA", "WDP.BR", "PSPN.SW", "SPSN.SW", "LAND.L", "SGRO.L", "BALD-B.ST", "CAST.ST", "GFC.PA", "AED.BR"],
+    "Versorger": ["IBE.MC", "ENEL.MI", "RWE.DE", "ENGIE.PA", "EOAN.DE", "EDP.LS", "ITRN.MI", "TER.MC", "FUM1V.HE", "NG.L", "SSE.L", "SVT.L", "ORSTED.CO", "A2A.MI", "HER.MI", "IREN.MI"]
 }
 
-SECTOR_MAP = {
+US_SECTOR_MAP = {
     "XLK": "Technologie", "XLF": "Finanzen", "XLC": "Kommunikation", 
     "XLY": "Zyklischer Konsum", "XLV": "Gesundheit", "XLI": "Industrie", 
     "XLP": "Basiskonsum", "XLE": "Energie", "XLB": "Materialien", 
     "XLRE": "Immobilien", "XLU": "Versorger"
 }
 
+EU_SECTOR_MAP = {
+    "EXV3.DE": "Technologie", "EXV1.DE": "Finanzen", "EXV9.DE": "Kommunikation", 
+    "EXV6.DE": "Zyklischer Konsum", "EXV5.DE": "Gesundheit", "EXV4.DE": "Industrie", 
+    "EXV2.DE": "Basiskonsum", "EXV8.DE": "Energie", "EXV7.DE": "Materialien", 
+    "EXSA.DE": "Immobilien", "EXVA.DE": "Versorger"
+}
+
 # --- Hilfsfunktionen ---
 @st.cache_data(ttl=3600)
-def fetch_sector_rsl():
-    tickers = list(SECTOR_MAP.keys())
+def fetch_sector_rsl(region="US"):
+    sector_map = US_SECTOR_MAP if region == "US" else EU_SECTOR_MAP
+    tickers = list(sector_map.keys())
+    
     try:
         data = yf.download(tickers, period="200d", progress=False)
         
         if data.empty:
             return pd.DataFrame()
             
-        # Robuster Umgang mit yfinance MultiIndex Änderungen
         if isinstance(data.columns, pd.MultiIndex):
             close_data = data['Close'] if 'Close' in data.columns.get_level_values(0) else data
         else:
             close_data = data
             
     except Exception as e:
-        st.error(f"Fehler beim Laden der Sektor-Daten: {e}")
+        st.error(f"Fehler beim Laden der Sektor-Daten ({region}): {e}")
         return pd.DataFrame()
         
     results = []
@@ -67,9 +75,7 @@ def fetch_sector_rsl():
         if ticker not in close_data.columns:
             continue
             
-        # Fehlende Tagesdaten entfernen, um iloc[-1] Fehler zu vermeiden
         series = close_data[ticker].dropna()
-        
         if len(series) < 130:
             continue
             
@@ -86,7 +92,7 @@ def fetch_sector_rsl():
             
         results.append({
             "Sektor": ticker,
-            "Name": SECTOR_MAP[ticker],
+            "Name": sector_map[ticker],
             "RSL": round(rsl, 3),
             "RSL Signal": status
         })
@@ -149,7 +155,7 @@ def analyze_stocks(tickers, apply_ema_filter, rsl_threshold):
                 
         results.append({
             "Ticker": ticker,
-            "Kurs ($)": round(current_price, 2),
+            "Kurs": round(current_price, 2),
             "RSL": round(rsl, 3),
             "EMA 5/20 Signal": signal_text
         })
@@ -160,7 +166,6 @@ def analyze_stocks(tickers, apply_ema_filter, rsl_threshold):
     return df
 
 def color_cells(val):
-    """Zentrale Farblogik für Long, Short, Neutral und Matches."""
     if isinstance(val, str):
         if val == "Long" or "Match 🟢" in val:
             return 'background-color: rgba(0, 255, 0, 0.2)'
@@ -173,9 +178,8 @@ def color_cells(val):
     return ''
 
 def display_styled_dataframe(df):
-    """Sicheres Einfärben der gesamten Tabelle, egal welche Pandas Version installiert ist."""
     if df.empty:
-        st.write("Keine Daten vorhanden (Eventuell Verbindungsfehler zu Yahoo Finance).")
+        st.write("Keine Daten vorhanden.")
         return
     try:
         st.dataframe(df.style.map(color_cells), use_container_width=True)
@@ -183,152 +187,204 @@ def display_styled_dataframe(df):
         st.dataframe(df.style.applymap(color_cells), use_container_width=True)
 
 # --- UI Aufbau ---
-st.title("🖥️ RESTOR Trading Terminal (v6.1 & v7.1)")
-st.markdown("**Regelwerk:** 4h-Chart Ausführung | 1d-Filterung | 0,5 % Risiko pro Trade")
+st.title("🖥️ Sektorfilter Trading nach RSL / HH-HT")
+st.markdown("**Regelwerk (v7.1):** 4h-Chart Ausführung | 1d-Filterung | 0,5 % Risiko pro Trade")
 
-# SCHRITT 1: Sektor RSL
+if st.button("🔄 Alle Live-Daten jetzt aktualisieren", use_container_width=True):
+    st.cache_data.clear()
+    st.rerun()
+
+# Globale Variablen für den Export sammeln
+sp500_strong_tickers = []
+euro_strong_tickers = []
+
+
+# =====================================================================
+# BLOCK 1: S&P 500
+# =====================================================================
 st.markdown("---")
-st.header("Schritt 1: Sektor-RSL Analyse")
+st.markdown("## 🇺🇸 S&P500 Analyse")
 
-col_t1, col_t_empty = st.columns([1.5, 1])
+# S&P500 - Schritt 1
+st.subheader("S&P500 - Schritt 1: Sektor-RSL Analyse")
+col_us1, col_us2 = st.columns([1.5, 1])
 
-with col_t1:
-    df_sectors = fetch_sector_rsl()
-    if not df_sectors.empty:
-        display_styled_dataframe(df_sectors)
+with col_us1:
+    df_sectors_us = fetch_sector_rsl("US")
+    if not df_sectors_us.empty:
+        display_styled_dataframe(df_sectors_us)
     else:
-        st.warning("Ladefehler: Bitte versuche es mit dem Button unten erneut.")
-        
-    if st.button("🔄 Live-Daten jetzt aktualisieren"):
-        st.cache_data.clear()
-        st.rerun()
+        st.warning("Ladefehler US-Sektoren.")
 
-# SCHRITT 2: Manueller Abgleich
-st.markdown("---")
-st.header("Schritt 2: Sektortrend hinterlegen (Höhere Hochs / Höhere Tiefs)")
-st.markdown("Trage hier die Werte (Long/Short/Neutral) aus deiner Marktstruktur-Tabelle ein.")
-
-if not df_sectors.empty:
-    match_data = df_sectors.copy()
+# S&P500 - Schritt 2
+st.subheader("S&P500 - Schritt 2: Sektortrend hinterlegen (HH / HT)")
+if not df_sectors_us.empty:
+    match_data_us = df_sectors_us.copy()
 else:
-    match_data = pd.DataFrame([{"Sektor": k, "Name": v, "RSL Signal": "Neutral"} for k, v in SECTOR_MAP.items()])
+    match_data_us = pd.DataFrame([{"Sektor": k, "Name": v, "RSL Signal": "Neutral"} for k, v in US_SECTOR_MAP.items()])
 
-match_data['T-S (Manuell)'] = "Neutral"
+match_data_us['T-S (Manuell)'] = "Neutral"
 
-col_edit, col_result = st.columns([1, 1.5])
+col_edit_us, col_result_us = st.columns([1, 1.5])
 
-with col_edit:
-    st.markdown("**Eingabemaske**")
-    edited_df_view = st.data_editor(
-        match_data[['Sektor', 'Name', 'T-S (Manuell)']],
-        column_config={
-            "T-S (Manuell)": st.column_config.SelectboxColumn(
-                "T-S (Manuell)",
-                options=["Long", "Short", "Neutral"],
-                required=True,
-            )
-        },
+with col_edit_us:
+    st.markdown("**US Eingabemaske**")
+    edited_df_view_us = st.data_editor(
+        match_data_us[['Sektor', 'Name', 'T-S (Manuell)']],
+        column_config={"T-S (Manuell)": st.column_config.SelectboxColumn("T-S (Manuell)", options=["Long", "Short", "Neutral"], required=True)},
         use_container_width=True,
-        key="screenshot_editor"
+        key="editor_us"
     )
 
-with col_result:
-    edited_df = edited_df_view.merge(match_data[['Sektor', 'RSL Signal']], on='Sektor', how='left')
-    
-    conditions = [
-        (edited_df['RSL Signal'] == 'Long') & (edited_df['T-S (Manuell)'] == 'Long'),
-        (edited_df['RSL Signal'] == 'Short') & (edited_df['T-S (Manuell)'] == 'Short')
+with col_result_us:
+    edited_df_us = edited_df_view_us.merge(match_data_us[['Sektor', 'RSL Signal']], on='Sektor', how='left')
+    conditions_us = [
+        (edited_df_us['RSL Signal'] == 'Long') & (edited_df_us['T-S (Manuell)'] == 'Long'),
+        (edited_df_us['RSL Signal'] == 'Short') & (edited_df_us['T-S (Manuell)'] == 'Short')
     ]
-    choices = ['Match 🟢', 'Match 🔴']
-    edited_df['Status'] = np.select(conditions, choices, default='Mismatch ⚠️')
+    edited_df_us['Status'] = np.select(conditions_us, ['Match 🟢', 'Match 🔴'], default='Mismatch ⚠️')
     
-    result_columns = ['Sektor', 'Name', 'RSL Signal', 'T-S (Manuell)', 'Status']
-    df_matches = edited_df[edited_df['Status'].str.contains('Match')][result_columns]
-    df_mismatches = edited_df[edited_df['Status'] == 'Mismatch ⚠️'][result_columns]
+    df_matches_us = edited_df_us[edited_df_us['Status'].str.contains('Match')][['Sektor', 'Name', 'RSL Signal', 'T-S (Manuell)', 'Status']]
+    df_mismatches_us = edited_df_us[edited_df_us['Status'] == 'Mismatch ⚠️'][['Sektor', 'Name', 'RSL Signal', 'T-S (Manuell)', 'Status']]
     
-    st.markdown("### 🎯 Trade-Freigaben (Matches)")
-    if not df_matches.empty:
-        display_styled_dataframe(df_matches)
-    else:
-        st.warning("Noch keine perfekten Matches gefunden. Kapital schützen.")
+    st.markdown("##### 🎯 US Trade-Freigaben")
+    if not df_matches_us.empty: display_styled_dataframe(df_matches_us)
+    else: st.warning("Noch keine perfekten US Matches gefunden.")
         
-    st.markdown("### ❌ Unstimmigkeiten (Mismatches)")
-    display_styled_dataframe(df_mismatches)
+    st.markdown("##### ❌ US Unstimmigkeiten")
+    display_styled_dataframe(df_mismatches_us)
 
-# --- SCHRITT 3: Einzelaktien Deep Dive ---
-st.markdown("---")
-st.header("Schritt 3: Einzelaktien Deep Dive")
+# S&P500 - Schritt 3
+st.subheader("S&P500 - Schritt 3: Einzelaktien Deep Dive")
+long_matches_us = edited_df_us[edited_df_us['Status'] == 'Match 🟢']['Sektor'].tolist()
 
-long_matches = edited_df[edited_df['Status'] == 'Match 🟢']['Sektor'].tolist()
-
-if not long_matches:
-    st.info("Warte auf bestätigte 'Match 🟢' Sektoren aus Schritt 2...")
+if not long_matches_us:
+    st.info("Warte auf bestätigte 'Match 🟢' US Sektoren aus Schritt 2...")
 else:
-    st.success(f"Starte High-Momentum-Scan für: {', '.join(long_matches)}")
-    
-    col_f1, col_f2 = st.columns(2)
-    with col_f1:
-        rsl_limit = st.slider("Minimale Relative Stärke (RSL)", min_value=1.00, max_value=1.20, value=1.05, step=0.01, help="1.05 bedeutet, die Aktie notiert 5% über ihrem SMA 130.")
-    with col_f2:
+    col_f1_us, col_f2_us = st.columns(2)
+    with col_f1_us:
+        rsl_limit_us = st.slider("Minimale RSL (US)", 1.00, 1.20, 1.05, 0.01, key="slider_us")
+    with col_f2_us:
         st.write("") 
         st.write("")
-        apply_ema = st.checkbox("Zwingend: Nur Aktien mit frischem EMA5/20 Cross anzeigen", value=False)
+        apply_ema_us = st.checkbox("Nur Aktien mit frischem EMA5/20 Cross (US)", False, key="chk_us")
     
-    tab1, tab2 = st.tabs(["🇺🇸 S&P 500 Auswertung", "🇪🇺 EuroStoxx Auswertung"])
-    
-    # Getrennte Listen für den Export
-    sp500_strong_tickers = []
-    euro_strong_tickers = []
-    
-    with tab1:
-        for sector in long_matches:
-            st.subheader(f"Sektor: {sector} ({SECTOR_MAP[sector]})")
-            tickers_to_check = SP500_AKTIEN.get(sector, [])
-            
-            if tickers_to_check:
-                with st.spinner(f"Scanne {len(tickers_to_check)} Aktien..."):
-                    df_stocks = analyze_stocks(tickers_to_check, apply_ema, rsl_limit)
-                    if not df_stocks.empty:
-                        st.dataframe(df_stocks, use_container_width=True)
-                        sp500_strong_tickers.extend(df_stocks['Ticker'].tolist())
-                    else:
-                        st.warning(f"Keine Aktie im Sektor {sector} erreicht aktuell einen RSL von {rsl_limit} (bzw. erfüllt den EMA-Filter).")
+    for sector in long_matches_us:
+        st.markdown(f"**US Sektor: {sector} ({US_SECTOR_MAP[sector]})**")
+        tickers_to_check = SP500_AKTIEN.get(sector, [])
+        if tickers_to_check:
+            with st.spinner(f"Scanne US Aktien..."):
+                df_stocks = analyze_stocks(tickers_to_check, apply_ema_us, rsl_limit_us)
+                if not df_stocks.empty:
+                    st.dataframe(df_stocks, use_container_width=True)
+                    sp500_strong_tickers.extend(df_stocks['Ticker'].tolist())
+                else:
+                    st.warning(f"Keine Treffer im Sektor {sector}.")
 
-    with tab2:
-        for sector in long_matches:
-            sector_name = SECTOR_MAP[sector]
-            st.subheader(f"Europa Sektor: {sector_name}")
-            eu_tickers = EUROSTOXX_AKTIEN.get(sector_name, [])
-            
-            if eu_tickers:
-                with st.spinner(f"Scanne {len(eu_tickers)} europäische Aktien..."):
-                    df_eu = analyze_stocks(eu_tickers, apply_ema, rsl_limit)
-                    if not df_eu.empty:
-                        st.dataframe(df_eu, use_container_width=True)
-                        euro_strong_tickers.extend(df_eu['Ticker'].tolist())
-                    else:
-                        st.warning(f"Keine Aktie im Sektor {sector_name} erreicht aktuell einen RSL von {rsl_limit} (bzw. erfüllt den EMA-Filter).")
 
-    # TradingView Export - Getrennt nach Märkten
-    st.markdown("---")
-    st.subheader("📺 TradingView Export")
-    st.caption("Kopiere diese Zeilen und füge sie direkt per STRG+V in deine TradingView Watchlists ein.")
-    
-    if sp500_strong_tickers or euro_strong_tickers:
-        col_tv1, col_tv2 = st.columns(2)
-        
-        with col_tv1:
-            st.markdown("**🇺🇸 S&P 500 Matches**")
-            if sp500_strong_tickers:
-                st.code(",".join(sp500_strong_tickers), language="text")
-            else:
-                st.info("Keine S&P 500 Ticker zum Exportieren.")
-                
-        with col_tv2:
-            st.markdown("**🇪🇺 EuroStoxx Matches**")
-            if euro_strong_tickers:
-                st.code(",".join(euro_strong_tickers), language="text")
-            else:
-                st.info("Keine EuroStoxx Ticker zum Exportieren.")
+# =====================================================================
+# BLOCK 2: EUROSTOXX
+# =====================================================================
+st.markdown("---")
+st.markdown("## 🇪🇺 EuroStoxx Analyse")
+
+# EuroStoxx - Schritt 1
+st.subheader("EuroStoxx - Schritt 1: Sektor-RSL Analyse")
+col_eu1, col_eu2 = st.columns([1.5, 1])
+
+with col_eu1:
+    df_sectors_eu = fetch_sector_rsl("EU")
+    if not df_sectors_eu.empty:
+        display_styled_dataframe(df_sectors_eu)
     else:
-        st.info("Aktuell keine Ticker für den Export vorhanden.")
+        st.warning("Ladefehler EU-Sektoren.")
+
+# EuroStoxx - Schritt 2
+st.subheader("EuroStoxx - Schritt 2: Sektortrend hinterlegen (HH / HT)")
+if not df_sectors_eu.empty:
+    match_data_eu = df_sectors_eu.copy()
+else:
+    match_data_eu = pd.DataFrame([{"Sektor": k, "Name": v, "RSL Signal": "Neutral"} for k, v in EU_SECTOR_MAP.items()])
+
+match_data_eu['T-S (Manuell)'] = "Neutral"
+
+col_edit_eu, col_result_eu = st.columns([1, 1.5])
+
+with col_edit_eu:
+    st.markdown("**EU Eingabemaske**")
+    edited_df_view_eu = st.data_editor(
+        match_data_eu[['Sektor', 'Name', 'T-S (Manuell)']],
+        column_config={"T-S (Manuell)": st.column_config.SelectboxColumn("T-S (Manuell)", options=["Long", "Short", "Neutral"], required=True)},
+        use_container_width=True,
+        key="editor_eu"
+    )
+
+with col_result_eu:
+    edited_df_eu = edited_df_view_eu.merge(match_data_eu[['Sektor', 'RSL Signal']], on='Sektor', how='left')
+    conditions_eu = [
+        (edited_df_eu['RSL Signal'] == 'Long') & (edited_df_eu['T-S (Manuell)'] == 'Long'),
+        (edited_df_eu['RSL Signal'] == 'Short') & (edited_df_eu['T-S (Manuell)'] == 'Short')
+    ]
+    edited_df_eu['Status'] = np.select(conditions_eu, ['Match 🟢', 'Match 🔴'], default='Mismatch ⚠️')
+    
+    df_matches_eu = edited_df_eu[edited_df_eu['Status'].str.contains('Match')][['Sektor', 'Name', 'RSL Signal', 'T-S (Manuell)', 'Status']]
+    df_mismatches_eu = edited_df_eu[edited_df_eu['Status'] == 'Mismatch ⚠️'][['Sektor', 'Name', 'RSL Signal', 'T-S (Manuell)', 'Status']]
+    
+    st.markdown("##### 🎯 EU Trade-Freigaben")
+    if not df_matches_eu.empty: display_styled_dataframe(df_matches_eu)
+    else: st.warning("Noch keine perfekten EU Matches gefunden.")
+        
+    st.markdown("##### ❌ EU Unstimmigkeiten")
+    display_styled_dataframe(df_mismatches_eu)
+
+# EuroStoxx - Schritt 3
+st.subheader("EuroStoxx - Schritt 3: Einzelaktien Deep Dive")
+long_matches_eu = edited_df_eu[edited_df_eu['Status'] == 'Match 🟢']['Sektor'].tolist()
+
+if not long_matches_eu:
+    st.info("Warte auf bestätigte 'Match 🟢' EU Sektoren aus Schritt 2...")
+else:
+    col_f1_eu, col_f2_eu = st.columns(2)
+    with col_f1_eu:
+        rsl_limit_eu = st.slider("Minimale RSL (EU)", 1.00, 1.20, 1.05, 0.01, key="slider_eu")
+    with col_f2_eu:
+        st.write("") 
+        st.write("")
+        apply_ema_eu = st.checkbox("Nur Aktien mit frischem EMA5/20 Cross (EU)", False, key="chk_eu")
+    
+    for sector in long_matches_eu:
+        sector_name = EU_SECTOR_MAP[sector]
+        st.markdown(f"**EU Sektor: {sector_name} ({sector})**")
+        eu_tickers = EUROSTOXX_AKTIEN.get(sector_name, [])
+        if eu_tickers:
+            with st.spinner(f"Scanne EU Aktien..."):
+                df_eu_stocks = analyze_stocks(eu_tickers, apply_ema_eu, rsl_limit_eu)
+                if not df_eu_stocks.empty:
+                    st.dataframe(df_eu_stocks, use_container_width=True)
+                    euro_strong_tickers.extend(df_eu_stocks['Ticker'].tolist())
+                else:
+                    st.warning(f"Keine Treffer im Sektor {sector_name}.")
+
+
+# =====================================================================
+# BLOCK 4: EXPORT
+# =====================================================================
+st.markdown("---")
+st.subheader("📺 TradingView Export")
+st.caption("Kopiere diese Zeilen und füge sie direkt per STRG+V in deine TradingView Watchlists ein.")
+
+col_tv1, col_tv2 = st.columns(2)
+
+with col_tv1:
+    st.markdown("**🇺🇸 S&P 500 Matches**")
+    if sp500_strong_tickers:
+        st.code(",".join(sp500_strong_tickers), language="text")
+    else:
+        st.info("Keine S&P 500 Ticker zum Exportieren.")
+        
+with col_tv2:
+    st.markdown("**🇪🇺 EuroStoxx Matches**")
+    if euro_strong_tickers:
+        st.code(",".join(euro_strong_tickers), language="text")
+    else:
+        st.info("Keine EuroStoxx Ticker zum Exportieren.")
