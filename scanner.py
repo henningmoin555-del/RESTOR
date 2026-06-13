@@ -2,9 +2,13 @@ import streamlit as st
 import yfinance as yf
 import pandas as pd
 import numpy as np
+import json
+import os
 
 # --- Konfiguration & Konstanten ---
 st.set_page_config(page_title="Sektorfilter Trading nach RSL / HH-HT", page_icon="📈", layout="wide")
+
+TRENDS_FILE = "sector_trends.json"
 
 # Interne Sektor-Datenbanken für Einzelaktien
 SP500_AKTIEN = {
@@ -49,7 +53,21 @@ EU_SECTOR_MAP = {
     "EXSA.DE": "Immobilien", "EXVA.DE": "Versorger"
 }
 
-# --- Hilfsfunktionen ---
+# --- Hilfsfunktionen für das Speichern der Trends ---
+def load_trends():
+    if os.path.exists(TRENDS_FILE):
+        try:
+            with open(TRENDS_FILE, "r") as f:
+                return json.load(f)
+        except Exception:
+            return {}
+    return {}
+
+def save_trends(trends_dict):
+    with open(TRENDS_FILE, "w") as f:
+        json.dump(trends_dict, f)
+
+# --- Hilfsfunktionen für die Marktdaten ---
 @st.cache_data(ttl=3600)
 def fetch_sector_rsl(region="US"):
     sector_map = US_SECTOR_MAP if region == "US" else EU_SECTOR_MAP
@@ -188,6 +206,15 @@ def display_styled_dataframe(df):
 
 # --- UI Aufbau ---
 st.title("🖥️ Sektorfilter Trading nach RSL / HH-HT")
+
+# Roter HTML Disclaimer
+st.markdown("""
+<div style="background-color: #ffe6e6; border-left: 5px solid #ff4d4d; padding: 15px; color: #cc0000; border-radius: 5px; margin-bottom: 20px;">
+    <strong>⚠️ Haftungsausschluss (Disclaimer):</strong><br>
+    Die App dient ausschließlich zu Informations- und Bildungszwecken. Es handelt sich um keine Anlageberatung und keine Aufforderung zum Kauf oder Verkauf von Wertpapieren. Alle Daten sind ohne Gewähr (keine Garantie für Richtigkeit, Vollständigkeit oder Aktualität der Kurse). Jeder Nutzer handelt auf eigenes Risiko.
+</div>
+""", unsafe_allow_html=True)
+
 st.markdown("**Regelwerk (v7.1):** 4h-Chart Ausführung | 1d-Filterung | 0,5 % Risiko pro Trade")
 
 # Aufklappbare Info-Bereiche
@@ -211,7 +238,7 @@ with col_info2:
         * **Einzelaktien:** Die durchsuchten Aktienlisten sind fest im Code hinterlegt und repräsentieren die Schwergewichte und liquidesten Werte des jeweiligen Sektors.
         """)
 
-st.markdown("<br>", unsafe_allow_html=True) # Etwas Abstand vor dem Button
+st.markdown("<br>", unsafe_allow_html=True)
 
 if st.button("🔄 Alle Live-Daten jetzt aktualisieren", use_container_width=True):
     st.cache_data.clear()
@@ -246,7 +273,9 @@ if not df_sectors_us.empty:
 else:
     match_data_us = pd.DataFrame([{"Sektor": k, "Name": v, "RSL Signal": "Neutral"} for k, v in US_SECTOR_MAP.items()])
 
-match_data_us['T-S (Manuell)'] = "Neutral"
+# Aktuell gespeicherte Trends laden und in das DataFrame einfügen
+saved_trends = load_trends()
+match_data_us['T-S (Manuell)'] = match_data_us['Sektor'].apply(lambda x: saved_trends.get(x, "Neutral"))
 
 col_edit_us, col_result_us = st.columns([1, 1.5])
 
@@ -258,6 +287,16 @@ with col_edit_us:
         use_container_width=True,
         key="editor_us"
     )
+
+    # Nach der Eingabe prüfen, ob sich Werte geändert haben und abspeichern
+    current_trends = load_trends()
+    needs_save = False
+    for _, row in edited_df_view_us.iterrows():
+        if current_trends.get(row['Sektor']) != row['T-S (Manuell)']:
+            current_trends[row['Sektor']] = row['T-S (Manuell)']
+            needs_save = True
+    if needs_save:
+        save_trends(current_trends)
 
 with col_result_us:
     edited_df_us = edited_df_view_us.merge(match_data_us[['Sektor', 'RSL Signal']], on='Sektor', how='left')
@@ -329,7 +368,9 @@ if not df_sectors_eu.empty:
 else:
     match_data_eu = pd.DataFrame([{"Sektor": k, "Name": v, "RSL Signal": "Neutral"} for k, v in EU_SECTOR_MAP.items()])
 
-match_data_eu['T-S (Manuell)'] = "Neutral"
+# Aktuell gespeicherte Trends für EU laden
+saved_trends_eu = load_trends()
+match_data_eu['T-S (Manuell)'] = match_data_eu['Sektor'].apply(lambda x: saved_trends_eu.get(x, "Neutral"))
 
 col_edit_eu, col_result_eu = st.columns([1, 1.5])
 
@@ -341,6 +382,16 @@ with col_edit_eu:
         use_container_width=True,
         key="editor_eu"
     )
+
+    # Nach der Eingabe prüfen, ob sich Werte geändert haben und abspeichern
+    current_trends_eu = load_trends()
+    needs_save_eu = False
+    for _, row in edited_df_view_eu.iterrows():
+        if current_trends_eu.get(row['Sektor']) != row['T-S (Manuell)']:
+            current_trends_eu[row['Sektor']] = row['T-S (Manuell)']
+            needs_save_eu = True
+    if needs_save_eu:
+        save_trends(current_trends_eu)
 
 with col_result_eu:
     edited_df_eu = edited_df_view_eu.merge(match_data_eu[['Sektor', 'RSL Signal']], on='Sektor', how='left')
