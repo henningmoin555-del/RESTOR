@@ -10,33 +10,33 @@ st.set_page_config(page_title="Sektorfilter Trading nach RSL / HH-HT", page_icon
 
 TRENDS_FILE = "sector_trends.json"
 
-# Interne Sektor-Datenbanken für Einzelaktien
+# Vollständige Sektor-Datenbanken (ohne Limitierung)
 SP500_AKTIEN = {
-    "XLK": ["AAPL", "MSFT", "NVDA", "AVGO", "ORCL", "CRM", "AMD", "ADBE", "CSCO", "INTC", "TXN", "QCOM", "INTU", "IBM", "AMAT", "NOW", "LRCX", "MU", "PANW", "KLAC", "ADI", "ROP", "TEL", "HPQ", "STX", "WDC", "FTNT", "ANET", "CDW", "CDNS", "SNPS", "APH", "GLW", "MSI", "SMCI", "TYL", "PTC", "FICO", "TER", "ANSS", "MCHP", "ON", "NTAP", "AKAM", "JNPR", "TRMB", "FFIV", "SWKS", "QRVO", "MPWR", "ENPH", "SEDG"],
-    "XLF": ["BRK-B", "JPM", "V", "MA", "BAC", "WFC", "GS", "MS", "C", "AXP", "SPGI", "BX", "CB", "MMC", "PGR", "CME", "SCHW", "BLK", "AON", "ICE", "FI", "USB", "PNC", "TFC", "COF", "BK", "AIG", "TRV", "MET", "PRU", "AFL", "ALL", "DFS", "SYF", "STT", "NTRS", "MTMT", "AMP", "FITB", "MTB", "HBAN", "RF", "CFG", "KEY", "CMA", "ZION"],
-    "XLC": ["META", "GOOGL", "GOOG", "NFLX", "DIS", "CMCSA", "VZ", "T", "CHTR", "TMUS", "ATVI", "EA", "TTWO", "WBD", "FOXA", "FOX", "PARA", "OMC", "IPG", "LYV", "MTCH", "NWSA", "NWS", "LBRDA"],
-    "XLY": ["AMZN", "TSLA", "HD", "MCD", "NKE", "SBUX", "LOW", "BKNG", "TJX", "CMG", "MAR", "HLT", "ORLY", "AZO", "TSCO", "F", "GM", "DHI", "LEN", "ROST", "LVS", "EXPE", "RCL", "CCL", "YUM", "DRI", "KMX", "EBAY", "ETSY", "HAS", "MAT", "APTV", "BWA", "LKQ", "GPC", "DVA", "PHM", "NVR", "POOL", "GRMN"],
-    "XLV": ["LLY", "UNH", "JNJ", "ABBV", "MRK", "TMO", "DHR", "ABT", "PFE", "AMGN", "ISRG", "SYK", "BSY", "VRTX", "BSX", "ZTS", "CI", "CVS", "GILD", "BDX", "HUM", "MCK", "MTD", "ALGN", "IDXX", "RMD", "DXCM", "EW", "HCA", "A", "CAH", "BIIB", "ILMN", "STE", "WST", "COO", "HOLX", "BAX", "ZBH", "COR", "INCY", "VTRS", "CRL", "XRAY"],
-    "XLI": ["CAT", "GE", "RTX", "LMT", "BA", "UNP", "UPS", "HON", "DE", "EMR", "ETN", "ITW", "NOC", "GD", "PH", "CMI", "PCAR", "ROK", "TT", "CARR", "OTIS", "URI", "CPRT", "FAST", "GWW", "FDX", "DAL", "UAL", "AAL", "LUV", "CSX", "NSC", "RSG", "WM", "CHRW", "EXPD", "JBHT", "ODFL", "R", "NDSN", "SNA", "SWK"],
-    "XLP": ["WMT", "PG", "COST", "KO", "PEP", "PM", "MO", "MDLZ", "TGT", "EL", "CL", "KMB", "GIS", "SYY", "K", "HSY", "KHC", "CHD", "CLX", "MKC", "CPB", "SJM", "TAP", "STZ", "MNST", "KR", "WBA", "DG", "DLTR", "TSN", "CAG", "LW"],
-    "XLE": ["XOM", "CVX", "COP", "EOG", "SLB", "MPC", "PSX", "VLO", "OXY", "WMB", "KMI", "HAL", "BKR", "HES", "DVN", "FANG", "CTRA", "TRGP", "MRO", "APA", "OKE", "EQT", "CHK"],
-    "XLB": ["LIN", "SHW", "ECL", "APD", "NEM", "FCX", "DOW", "DD", "CTVA", "NUE", "VMC", "MLM", "ALB", "FMC", "CE", "EMN", "IFF", "PPG", "CF", "MOS", "STLD", "PKG", "WRK", "IP", "AMCR", "BALL", "SEE"],
-    "XLRE": ["PLD", "AMT", "EQIX", "WELL", "SPG", "PSA", "O", "DLR", "CSGP", "CCI", "VICI", "CBRE", "AVB", "EQR", "EXR", "ARE", "INVH", "MAA", "UDR", "BXP", "HST", "IRM", "KIM", "REG", "VTR", "WY", "CPT", "ESS"],
-    "XLU": ["NEE", "SO", "DUK", "SRE", "AEP", "D", "EXC", "XEL", "ED", "WEC", "PEG", "AWK", "EIX", "ETR", "FE", "PPL", "CMS", "AEE", "LNT", "NI", "PNW", "CNP", "ES", "EVRG", "ATO", "NRG", "VST"]
+    "XLK": ["AAPL","MSFT","NVDA","AVGO","ORCL","CRM","AMD","ADBE","CSCO","INTC","TXN","QCOM","INTU","IBM","AMAT","NOW","LRCX","MU","PANW","KLAC","ADI","ROP","TEL","HPQ","STX","WDC","FTNT","ANET","CDW","CDNS","SNPS","APH","GLW","MSI","SMCI","TYL","PTC","FICO","TER","ANSS","MCHP","ON","NTAP","AKAM","JNPR","TRMB","FFIV","SWKS","QRVO","MPWR","ENPH","SEDG","FSLR","IT","EPAM","GEN","JBL","KEYS","TDY","ZBRA","NXPI","PAYC","VRSN"],
+    "XLF": ["BRK-B","JPM","V","MA","BAC","WFC","GS","MS","C","AXP","SPGI","BX","CB","MMC","PGR","CME","SCHW","BLK","AON","ICE","FI","USB","PNC","TFC","COF","BK","AIG","TRV","MET","PRU","AFL","ALL","DFS","SYF","STT","NTRS","AMP","FITB","MTB","HBAN","RF","CFG","KEY","CMA","ZION","BEN","CBOE","CINF","FDS","GL","HIG","IVZ","L","MCO","NDAQ","PFG","RJF","WRB","WTW","BRO","EG","EVR","FHN","GPN","JKHY","LNC"],
+    "XLC": ["META","GOOGL","GOOG","NFLX","DIS","CMCSA","VZ","T","CHTR","TMUS","EA","TTWO","WBD","FOXA","FOX","PARA","OMC","IPG","LYV","MTCH","NWSA","NWS","LBRDA","DISH","LBRDK","NTES","SIRI"],
+    "XLY": ["AMZN","TSLA","HD","MCD","NKE","SBUX","LOW","BKNG","TJX","CMG","MAR","HLT","ORLY","AZO","TSCO","F","GM","DHI","LEN","ROST","LVS","EXPE","RCL","CCL","YUM","DRI","KMX","EBAY","ETSY","HAS","MAT","APTV","BWA","LKQ","GPC","DVA","PHM","NVR","POOL","GRMN","AAP","BBY","CZR","DPZ","MGM","MHK","NCLH","PEN","RL","TGT","UAA","VFC","WHR","WYNN"],
+    "XLV": ["LLY","UNH","JNJ","ABBV","MRK","TMO","DHR","ABT","PFE","AMGN","ISRG","SYK","BSX","VRTX","ZTS","CI","CVS","GILD","BDX","HUM","MCK","MTD","ALGN","IDXX","RMD","DXCM","EW","HCA","A","CAH","BIIB","ILMN","STE","WST","COO","HOLX","BAX","ZBH","COR","INCY","VTRS","CRL","XRAY","BIO","BMY","HSIC","IQV","LH","MRNA","REGN","TFX","UHS"],
+    "XLI": ["CAT","GE","RTX","LMT","BA","UNP","UPS","HON","DE","EMR","ETN","ITW","NOC","GD","PH","CMI","PCAR","ROK","TT","CARR","OTIS","URI","CPRT","FAST","GWW","FDX","DAL","UAL","AAL","LUV","CSX","NSC","RSG","WM","CHRW","EXPD","JBHT","ODFL","R","NDSN","SNA","SWK","AME","AOS","EFX","GNRC","HWM","IEX","INFO","JCI","LHX","MAS","PNR","PWR","TXT","VRSK","WAB","XYL"],
+    "XLP": ["WMT","PG","COST","KO","PEP","PM","MO","MDLZ","TGT","EL","CL","KMB","GIS","SYY","K","HSY","KHC","CHD","CLX","MKC","CPB","SJM","TAP","STZ","MNST","KR","WBA","DG","DLTR","TSN","CAG","LW","ADM","BF-B"],
+    "XLE": ["XOM","CVX","COP","EOG","SLB","MPC","PSX","VLO","OXY","WMB","KMI","HAL","BKR","HES","DVN","FANG","CTRA","TRGP","MRO","APA","OKE","EQT","CHK","CIVI","PR"],
+    "XLB": ["LIN","SHW","ECL","APD","NEM","FCX","DOW","DD","CTVA","NUE","VMC","MLM","ALB","FMC","CE","EMN","IFF","PPG","CF","MOS","STLD","PKG","WRK","IP","AMCR","BALL","SEE"],
+    "XLRE": ["PLD","AMT","EQIX","WELL","SPG","PSA","O","DLR","CSGP","CCI","VICI","CBRE","AVB","EQR","EXR","ARE","INVH","MAA","UDR","BXP","HST","IRM","KIM","REG","VTR","WY","CPT","ESS","FRT","SBAC"],
+    "XLU": ["NEE","SO","DUK","SRE","AEP","D","EXC","XEL","ED","WEC","PEG","AWK","EIX","ETR","FE","PPL","CMS","AEE","LNT","NI","PNW","CNP","ES","EVRG","ATO","NRG","VST","CEG"]
 }
 
 EUROSTOXX_AKTIEN = {
-    "Technologie": ["ASML.AS", "SAP.DE", "INF.DE", "ASM.AS", "CAP.PA", "SU.PA", "BSEM.AS", "DSY.PA", "STM.MI", "NOKIA.HE", "LOGN.SW", "TEMN.SW", "SOON.SW"],
-    "Finanzen": ["SAN.MC", "BNP.PA", "ALV.DE", "INGA.AS", "ISP.MI", "MUV2.DE", "CS.PA", "BBVA.MC", "UCG.MI", "DBK.DE", "KBC.BR", "NDA-FI.HE", "UBSG.SW", "ZURN.SW", "BARC.L", "HSBA.L", "LLOY.L", "NWG.L", "PRU.L", "AGN.AS", "CBK.DE", "SREN.SW", "SCB.L"],
-    "Kommunikation": ["ORAN.PA", "DTE.DE", "VOD.L", "TEF.MC", "KPN.AS", "TIM.MI", "VIV.PA", "PROX.BR", "DNA.HE", "ELISA.HE", "BT-A.L", "UMG.AS", "PUB.PA", "WPP.L", "INW.MI", "SGEF.PA"],
-    "Zyklischer Konsum": ["RMS.PA", "LVMH.PA", "OR.PA", "BMW.DE", "MBG.DE", "VOW3.DE", "STE.PA", "IAG.MC", "PUM.DE", "CDI.PA", "ITX.MC", "RNO.PA", "RACE.MI", "MONC.MI", "STLA.MI", "HMB.ST", "NXT.L", "PORS.DE", "PAH3.DE", "CFR.SW", "CPG.L", "ADS.DE", "JD.L"],
-    "Gesundheit": ["SAN.PA", "BAYN.DE", "MRK.DE", "UCB.BR", "FRE.DE", "QIA.DE", "EL.PA", "FME.DE", "SRG.MI", "NOVN.SW", "ROG.SW", "LONN.SW", "GSK.L", "AZN.L", "NOVO-B.CO", "ALC.SW", "SHL.DE", "COLO-B.CO", "HLN.L", "SNW.DE"],
-    "Industrie": ["SIE.DE", "AIR.PA", "DHL.DE", "ALST.PA", "SU.PA", "SAF.PA", "DSY.PA", "VCI.PA", "HO.PA", "ENR.DE", "MTX.DE", "PRY.MI", "ABB.SW", "VOLV-B.ST", "BAE.L", "DSV.CO", "KNIN.SW", "SGO.PA", "GEBN.SW", "EPI-A.ST", "SAND.ST", "ASSA-B.ST", "RTO.L", "RHM.DE"],
-    "Basiskonsum": ["HEIA.AS", "BN.PA", "ULVR.L", "ABI.BR", "ABEA.DE", "BEI.DE", "CA.PA", "AH.AS", "KERRY.I", "NESN.SW", "LIND.SW", "DGE.L", "BATS.L", "IMB.L", "RKT.L", "ORK.OL", "SALM.OL", "AD.AS", "AAK.ST"],
-    "Energie": ["TTE.PA", "ENI.MI", "REP.MC", "TEN.MI", "OMV.VI", "SHEL.AS", "GALP.LS", "NESTE.HE", "BP.L", "EQNR.OL", "SNAM.MI", "AKRBP.OL", "VWS.CO"],
-    "Materialien": ["BAS.DE", "CRH.L", "AI.PA", "SY1.DE", "MT.AS", "UPM.HE", "COV.DE", "HEI.DE", "DSM.AS", "SOLB.BR", "RIO.L", "GLEN.L", "AAL.L", "HOLN.SW", "SIKA.SW", "GIVN.SW", "STORAERV.HE", "NZYM-B.CO", "BHP.L", "AKZA.AS", "KNEBV.HE"],
-    "Immobilien": ["VNA.DE", "URW.AS", "LEG.DE", "AROUNDTOWN.DE", "ICAD.PA", "KLEIM.PA", "WDP.BR", "PSPN.SW", "SPSN.SW", "LAND.L", "SGRO.L", "BALD-B.ST", "CAST.ST", "GFC.PA", "AED.BR"],
-    "Versorger": ["IBE.MC", "ENEL.MI", "RWE.DE", "ENGIE.PA", "EOAN.DE", "EDP.LS", "ITRN.MI", "TER.MC", "FUM1V.HE", "NG.L", "SSE.L", "SVT.L", "ORSTED.CO", "A2A.MI", "HER.MI", "IREN.MI"]
+    "Technologie": ["ASML.AS","SAP.DE","INF.DE","ASM.AS","CAP.PA","SU.PA","BSEM.AS","DSY.PA","STM.MI","NOKIA.HE","LOGN.SW","TEMN.SW","SOON.SW","AMS.SW","BEI.DE","NEM.DE","AIXA.DE","AT1.DE","SIL.PA","SOIT.PA"],
+    "Finanzen": ["SAN.MC","BNP.PA","ALV.DE","INGA.AS","ISP.MI","MUV2.DE","CS.PA","BBVA.MC","UCG.MI","DBK.DE","KBC.BR","NDA-FI.HE","UBSG.SW","ZURN.SW","BARC.L","HSBA.L","LLOY.L","NWG.L","PRU.L","AGN.AS","CBK.DE","SREN.SW","SCB.L","GLE.PA","ACA.PA","DNB.OL","SEB-A.ST","SHB-A.ST","SWEDA.ST","DANSKE.CO"],
+    "Kommunikation": ["ORAN.PA","DTE.DE","VOD.L","TEF.MC","KPN.AS","TIM.MI","VIV.PA","PROX.BR","DNA.HE","ELISA.HE","BT-A.L","UMG.AS","PUB.PA","WPP.L","INW.MI","SGEF.PA","TIGO-SDB.ST","TELIA.ST","TEL.OL"],
+    "Zyklischer Konsum": ["RMS.PA","LVMH.PA","OR.PA","BMW.DE","MBG.DE","VOW3.DE","STE.PA","IAG.MC","PUM.DE","CDI.PA","ITX.MC","RNO.PA","RACE.MI","MONC.MI","STLA.MI","HMB.ST","NXT.L","PORS.DE","PAH3.DE","CFR.SW","CPG.L","ADS.DE","JD.L","KER.PA","MC.PA","WTB.L","BURBY.L"],
+    "Gesundheit": ["SAN.PA","BAYN.DE","MRK.DE","UCB.BR","FRE.DE","QIA.DE","EL.PA","FME.DE","SRG.MI","NOVN.SW","ROG.SW","LONN.SW","GSK.L","AZN.L","NOVO-B.CO","ALC.SW","SHL.DE","COLO-B.CO","HLN.L","SNW.DE","RMD.L","SNN.L","GN.CO","DEMANT.CO"],
+    "Industrie": ["SIE.DE","AIR.PA","DHL.DE","ALST.PA","SU.PA","SAF.PA","DSY.PA","VCI.PA","HO.PA","ENR.DE","MTX.DE","PRY.MI","ABB.SW","VOLV-B.ST","BAE.L","DSV.CO","KNIN.SW","SGO.PA","GEBN.SW","EPI-A.ST","SAND.ST","ASSA-B.ST","RTO.L","RHM.DE","SMT.L","RR.L","WEIR.L","IMI.L"],
+    "Basiskonsum": ["HEIA.AS","BN.PA","ULVR.L","ABI.BR","ABEA.DE","BEI.DE","CA.PA","AH.AS","KERRY.I","NESN.SW","LIND.SW","DGE.L","BATS.L","IMB.L","RKT.L","ORK.OL","SALM.OL","AD.AS","AAK.ST","JMT.LS","CARLB.CO","RBREW.L"],
+    "Energie": ["TTE.PA","ENI.MI","REP.MC","TEN.MI","OMV.VI","SHEL.AS","GALP.LS","NESTE.HE","BP.L","EQNR.OL","SNAM.MI","AKRBP.OL","VWS.CO","MAERSK-B.CO","SUBC.OL"],
+    "Materialien": ["BAS.DE","CRH.L","AI.PA","SY1.DE","MT.AS","UPM.HE","COV.DE","HEI.DE","DSM.AS","SOLB.BR","RIO.L","GLEN.L","AAL.L","HOLN.SW","SIKA.SW","GIVN.SW","STORAERV.HE","NZYM-B.CO","BHP.L","AKZA.AS","KNEBV.HE","BOL.ST","SCA-B.ST"],
+    "Immobilien": ["VNA.DE","URW.AS","LEG.DE","AROUNDTOWN.DE","ICAD.PA","KLEIM.PA","WDP.BR","PSPN.SW","SPSN.SW","LAND.L","SGRO.L","BALD-B.ST","CAST.ST","GFC.PA","AED.BR","COFN.PA","NXI.PA"],
+    "Versorger": ["IBE.MC","ENEL.MI","RWE.DE","ENGIE.PA","EOAN.DE","EDP.LS","ITRN.MI","TER.MC","FUM1V.HE","NG.L","SSE.L","SVT.L","ORSTED.CO","A2A.MI","HER.MI","IREN.MI","CNA.L","UU.L"]
 }
 
 US_SECTOR_MAP = {
@@ -68,7 +68,7 @@ def save_trends(trends_dict):
         json.dump(trends_dict, f)
 
 # --- Hilfsfunktionen für die Marktdaten ---
-@st.cache_data(ttl=3600)
+@st.cache_data(ttl=14400)  # Erhöht auf 4 Stunden für riesige Aktienlisten
 def fetch_sector_rsl(region="US"):
     sector_map = US_SECTOR_MAP if region == "US" else EU_SECTOR_MAP
     tickers = list(sector_map.keys())
@@ -120,7 +120,7 @@ def fetch_sector_rsl(region="US"):
         
     return pd.DataFrame(results).sort_values(by="RSL", ascending=False)
 
-@st.cache_data(ttl=3600)
+@st.cache_data(ttl=14400) # Erhöht auf 4 Stunden
 def analyze_stocks(tickers, apply_ema_filter, rsl_threshold):
     if not tickers:
         return pd.DataFrame()
@@ -255,7 +255,7 @@ with col_info2:
         * **Datenquelle:** Alle Kursdaten werden in Echtzeit via **Yahoo Finance** (`yfinance`) bezogen. Es werden Tagesendkurse (1d) verarbeitet.
         * **S&P 500 Sektoren:** Für den US-Markt werden die bekannten SPDR Sector ETFs genutzt (z. B. XLK für Technologie).
         * **EuroStoxx Sektoren:** Für den europäischen Markt greift das Tool auf die iShares STOXX Europe 600 Sektor-ETFs zurück (z. B. EXV3.DE für Technologie).
-        * **Einzelaktien:** Die durchsuchten Aktienlisten sind fest im Code hinterlegt und repräsentieren die Schwergewichte und liquidesten Werte des jeweiligen Sektors.
+        * **Einzelaktien:** Die durchsuchten Aktienlisten beinhalten nahezu alle Werte des S&P 500 und hunderte Werte des EuroStoxx (Mid- und Small-Caps inkludiert). Das initiale Laden großer Sektoren kann daher 60-120 Sekunden dauern.
         * **Speicherung:** Deine manuellen Eingaben aus Schritt 2 werden lokal in einer Datei (`sector_trends.json`) gespeichert, sodass sie beim Neuladen der Seite erhalten bleiben.
         """)
 
@@ -358,7 +358,7 @@ else:
         st.markdown(f"**US Sektor: {sector} ({US_SECTOR_MAP[sector]})**")
         tickers_to_check = SP500_AKTIEN.get(sector, [])
         if tickers_to_check:
-            with st.spinner(f"Scanne US Aktien..."):
+            with st.spinner(f"Scanne US Aktien... dies kann bei großen Sektoren einen Moment dauern."):
                 df_stocks = analyze_stocks(tickers_to_check, apply_ema_us, rsl_limit_us)
                 if not df_stocks.empty:
                     st.dataframe(df_stocks, use_container_width=True, hide_index=True)
@@ -456,7 +456,7 @@ else:
         st.markdown(f"**EU Sektor: {sector_name} ({sector})**")
         eu_tickers = EUROSTOXX_AKTIEN.get(sector_name, [])
         if eu_tickers:
-            with st.spinner(f"Scanne EU Aktien..."):
+            with st.spinner(f"Scanne EU Aktien... dies kann bei großen Sektoren einen Moment dauern."):
                 df_eu_stocks = analyze_stocks(eu_tickers, apply_ema_eu, rsl_limit_eu)
                 if not df_eu_stocks.empty:
                     st.dataframe(df_eu_stocks, use_container_width=True, hide_index=True)
