@@ -157,6 +157,16 @@ def analyze_stocks(tickers, apply_ema_filter, rsl_threshold):
         if rsl < rsl_threshold:
             continue
             
+        # Volatilität berechnen (Annualisierte Standardabweichung der letzten 130 Tage)
+        returns = series.pct_change().dropna()
+        if len(returns) >= 130:
+            volatility = float(returns.tail(130).std() * np.sqrt(252))
+        else:
+            volatility = 0.0
+            
+        # Smooth Momentum Score: RSL risikoadjustiert
+        smooth_rsl = rsl / volatility if volatility > 0 else 0
+            
         ema5 = series.ewm(span=5, adjust=False).mean()
         ema20 = series.ewm(span=20, adjust=False).mean()
         
@@ -175,12 +185,15 @@ def analyze_stocks(tickers, apply_ema_filter, rsl_threshold):
             "Ticker": ticker,
             "Kurs": round(current_price, 2),
             "RSL": round(rsl, 3),
+            "Vola (p.a.)": f"{round(volatility * 100, 1)}%",
+            "Smooth RSL": round(smooth_rsl, 2),
             "EMA 5/20 Signal": signal_text
         })
             
     df = pd.DataFrame(results)
     if not df.empty:
-        df = df.sort_values(by="RSL", ascending=False).head(15)
+        # Neu: Sortierung erfolgt nach dem risikoadjustierten Score
+        df = df.sort_values(by="Smooth RSL", ascending=False).head(15)
     return df
 
 def color_cells(val):
@@ -226,7 +239,7 @@ with col_info1:
         Dieses Terminal automatisiert den Top-Down-Ansatz für dein Trading:
         1. **Marktphase (Sektor-RSL):** Zuerst wird die Relative Stärke (RSL) der übergeordneten Sektoren auf Basis des 130-Tage-SMA berechnet. Sektoren mit RSL $\ge$ 1.010 gelten als **Long**, RSL $\le$ 0.989 als **Short**.
         2. **Trendabgleich (HH/HT):** Du gleichst die maschinelle RSL-Auswertung manuell mit deiner Chartanalyse (Marktstruktur: Höhere Hochs / Höhere Tiefs) ab. Nur bei einem perfekten Match (z. B. RSL Long + Struktur Long) wird der Sektor freigegeben.
-        3. **Deep Dive (Stock Picking):** In den freigegebenen Sektoren sucht das Tool automatisch nach Einzelaktien, die eine hohe RSL aufweisen und (optional) ein frisches, bullisches EMA 5/20 Crossover zeigen.
+        3. **Deep Dive (Stock Picking):** In den freigegebenen Sektoren sucht das Tool automatisch nach Einzelaktien, die eine hohe RSL aufweisen und (optional) ein frisches, bullisches EMA 5/20 Crossover zeigen. Diese Aktien werden anschließend risikoadjustiert nach dem **Smooth Momentum Score** (RSL / Volatilität) sortiert.
         """)
 
 with col_info2:
