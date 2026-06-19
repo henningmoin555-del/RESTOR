@@ -10,7 +10,7 @@ st.set_page_config(page_title="Sektorfilter Trading nach RSL / HH-HT", page_icon
 
 TRENDS_FILE = "sector_trends.json"
 
-# Vollständige Sektor-Datenbanken (ohne Limitierung)
+# Vollständige Sektor-Datenbanken
 SP500_AKTIEN = {
     "XLK": ["AAPL","MSFT","NVDA","AVGO","ORCL","CRM","AMD","ADBE","CSCO","INTC","TXN","QCOM","INTU","IBM","AMAT","NOW","LRCX","MU","PANW","KLAC","ADI","ROP","TEL","HPQ","STX","WDC","FTNT","ANET","CDW","CDNS","SNPS","APH","GLW","MSI","SMCI","TYL","PTC","FICO","TER","ANSS","MCHP","ON","NTAP","AKAM","JNPR","TRMB","FFIV","SWKS","QRVO","MPWR","ENPH","SEDG","FSLR","IT","EPAM","GEN","JBL","KEYS","TDY","ZBRA","NXPI","PAYC","VRSN"],
     "XLF": ["BRK-B","JPM","V","MA","BAC","WFC","GS","MS","C","AXP","SPGI","BX","CB","MMC","PGR","CME","SCHW","BLK","AON","ICE","FI","USB","PNC","TFC","COF","BK","AIG","TRV","MET","PRU","AFL","ALL","DFS","SYF","STT","NTRS","AMP","FITB","MTB","HBAN","RF","CFG","KEY","CMA","ZION","BEN","CBOE","CINF","FDS","GL","HIG","IVZ","L","MCO","NDAQ","PFG","RJF","WRB","WTW","BRO","EG","EVR","FHN","GPN","JKHY","LNC"],
@@ -25,18 +25,26 @@ SP500_AKTIEN = {
     "XLU": ["NEE","SO","DUK","SRE","AEP","D","EXC","XEL","ED","WEC","PEG","AWK","EIX","ETR","FE","PPL","CMS","AEE","LNT","NI","PNW","CNP","ES","EVRG","ATO","NRG","VST","CEG"]
 }
 
-EUROSTOXX_AKTIEN = {
-    "Technologie": ["ASML.AS","SAP.DE","INF.DE","ASM.AS","CAP.PA","SU.PA","BSEM.AS","DSY.PA","STM.MI","NOKIA.HE","LOGN.SW","TEMN.SW","SOON.SW","AMS.SW","BEI.DE","NEM.DE","AIXA.DE","AT1.DE","SIL.PA","SOIT.PA"],
-    "Finanzen": ["SAN.MC","BNP.PA","ALV.DE","INGA.AS","ISP.MI","MUV2.DE","CS.PA","BBVA.MC","UCG.MI","DBK.DE","KBC.BR","NDA-FI.HE","UBSG.SW","ZURN.SW","BARC.L","HSBA.L","LLOY.L","NWG.L","PRU.L","AGN.AS","CBK.DE","SREN.SW","SCB.L","GLE.PA","ACA.PA","DNB.OL","SEB-A.ST","SHB-A.ST","SWEDA.ST","DANSKE.CO"],
-    "Kommunikation": ["ORAN.PA","DTE.DE","VOD.L","TEF.MC","KPN.AS","TIM.MI","VIV.PA","PROX.BR","DNA.HE","ELISA.HE","BT-A.L","UMG.AS","PUB.PA","WPP.L","INW.MI","SGEF.PA","TIGO-SDB.ST","TELIA.ST","TEL.OL"],
-    "Zyklischer Konsum": ["RMS.PA","LVMH.PA","OR.PA","BMW.DE","MBG.DE","VOW3.DE","STE.PA","IAG.MC","PUM.DE","CDI.PA","ITX.MC","RNO.PA","RACE.MI","MONC.MI","STLA.MI","HMB.ST","NXT.L","PORS.DE","PAH3.DE","CFR.SW","CPG.L","ADS.DE","JD.L","KER.PA","MC.PA","WTB.L","BURBY.L"],
-    "Gesundheit": ["SAN.PA","BAYN.DE","MRK.DE","UCB.BR","FRE.DE","QIA.DE","EL.PA","FME.DE","SRG.MI","NOVN.SW","ROG.SW","LONN.SW","GSK.L","AZN.L","NOVO-B.CO","ALC.SW","SHL.DE","COLO-B.CO","HLN.L","SNW.DE","RMD.L","SNN.L","GN.CO","DEMANT.CO"],
-    "Industrie": ["SIE.DE","AIR.PA","DHL.DE","ALST.PA","SU.PA","SAF.PA","DSY.PA","VCI.PA","HO.PA","ENR.DE","MTX.DE","PRY.MI","ABB.SW","VOLV-B.ST","BAE.L","DSV.CO","KNIN.SW","SGO.PA","GEBN.SW","EPI-A.ST","SAND.ST","ASSA-B.ST","RTO.L","RHM.DE","SMT.L","RR.L","WEIR.L","IMI.L"],
-    "Basiskonsum": ["HEIA.AS","BN.PA","ULVR.L","ABI.BR","ABEA.DE","BEI.DE","CA.PA","AH.AS","KERRY.I","NESN.SW","LIND.SW","DGE.L","BATS.L","IMB.L","RKT.L","ORK.OL","SALM.OL","AD.AS","AAK.ST","JMT.LS","CARLB.CO","RBREW.L"],
-    "Energie": ["TTE.PA","ENI.MI","REP.MC","TEN.MI","OMV.VI","SHEL.AS","GALP.LS","NESTE.HE","BP.L","EQNR.OL","SNAM.MI","AKRBP.OL","VWS.CO","MAERSK-B.CO","SUBC.OL"],
-    "Materialien": ["BAS.DE","CRH.L","AI.PA","SY1.DE","MT.AS","UPM.HE","COV.DE","HEI.DE","DSM.AS","SOLB.BR","RIO.L","GLEN.L","AAL.L","HOLN.SW","SIKA.SW","GIVN.SW","STORAERV.HE","NZYM-B.CO","BHP.L","AKZA.AS","KNEBV.HE","BOL.ST","SCA-B.ST"],
-    "Immobilien": ["VNA.DE","URW.AS","LEG.DE","AROUNDTOWN.DE","ICAD.PA","KLEIM.PA","WDP.BR","PSPN.SW","SPSN.SW","LAND.L","SGRO.L","BALD-B.ST","CAST.ST","GFC.PA","AED.BR","COFN.PA","NXI.PA"],
-    "Versorger": ["IBE.MC","ENEL.MI","RWE.DE","ENGIE.PA","EOAN.DE","EDP.LS","ITRN.MI","TER.MC","FUM1V.HE","NG.L","SSE.L","SVT.L","ORSTED.CO","A2A.MI","HER.MI","IREN.MI","CNA.L","UU.L"]
+EUROSTOXX_GETTEX_AKTIEN = {
+    "EXV1": ["BNP", "ISP", "UCG", "SAN", "BBVA", "DBK", "CBK", "KBC", "INN", "NDB", "DNB", "EBS", "CABK", "ABN", "HBC1", "BCY", "LLD", "NWG", "STAN", "BKT", "SAB", "BCP", "UNI", "BAMI", "BPER", "FINE", "BGN", "BAER", "JYSK", "SYDB"],
+    "EXV2": ["DTE", "FTE", "VOD", "TNE5", "KPN", "BTV1", "TLS1", "ELI1", "TEF", "SIA", "O2D", "PROX", "INW", "TEL", "MTX", "SESG"],
+    "EXV3": ["ASME", "SAP", "PRX", "IFX", "CGP", "SGM", "NOA3", "BEI", "DSY", "SUG", "LOGN", "SOON", "ASM", "NEM", "BSI", "DTG", "AIXA", "JEN", "SOW", "ATO", "SQ1", "NEX", "WKL", "KNM"],
+    "EXV4": ["NOVC", "NOT", "ZEGN", "RHO5", "SNW", "GS7", "BAYN", "FME", "HLN", "ALC", "COLB", "SRT", "QIA", "GRI", "SNH", "DIA", "UCB", "GN", "AMBU", "CHR", "ELE", "GETI", "LONN", "VIFN", "TEC", "GMD", "RDY", "UMG", "CARL", "EVT"],
+    "EXV5": ["MBG", "BMW", "8TI", "VOW3", "2FE", "RNL", "PAH3", "CON", "P911", "MICP", "VLE", "FOR", "APTV", "BWA", "RNO", "AML", "NRE1", "SAU", "PUM"],
+    "EXV6": ["RIO1", "GLJ", "UPM", "NRS", "SDF", "SY1", "AAL", "BOL", "MT", "STE", "SCMN", "HOLN", "SSAB", "PKN", "ANTO", "FRES", "KAZ", "MDI", "POLY", "VED"],
+    "EXV7": ["BAS", "SY1", "COV", "EVK", "DSM", "AKZ", "AI", "CRO", "GIV", "UMG", "LAN", "WCH", "SGO", "JMAT", "EMS", "CLX", "KWS", "SHL", "YAR"],
+    "EXV8": ["SGO", "CRH", "HEI", "ACS", "HO", "DG", "FER", "SKA-B", "BDEV", "PSN", "TW", "BKG", "VWS", "GIB", "NIBE", "ROCK-B", "SIG", "SPM"],
+    "EXV9": ["LHA", "TUI1", "IAG", "IHG", "EZJ", "AMC", "FLTR", "ENT", "FDP", "SOD", "WIZZ", "RYA", "ACC", "CPG", "EVR", "GRG", "KIN", "PNN", "WTB", "AAL"],
+    "EXH1": ["R6C0", "TTE", "BPE5", "ENI", "DNQ", "REP", "GALP", "SNAM", "AKRBP", "LUN", "SU", "OMV", "TEN", "SBM", "VWS", "NEL", "ORST", "PKN"],
+    "EXH2": ["UBSG", "LSEG", "DB1", "PRU", "SDR", "HL", "EXPN", "STJ", "III", "KINV", "EQT", "ADJ", "ICP", "SJP", "MNG", "IGG", "NXG", "AJB", "OSB"],
+    "EXH3": ["NESR", "UNVB", "GUI", "ABI", "BSN", "HEIA", "BMT", "LND", "DGE", "BATS", "IMB", "KRY", "ORK", "CFR", "DSY", "TATE", "BVIC", "GNC", "AAK", "SALM", "MOWI", "BAK"],
+    "EXH4": ["SIE", "SND", "AIR", "ABBN", "DPW", "MTX", "DSV", "VOLV", "EPI", "KNEBV", "BA", "SAFR", "SGE", "RTO", "HTG", "SMIN", "WEIR", "IMI", "SPX", "KNIN", "SGSN", "ADEN", "RND", "BURE"],
+    "EXH5": ["ALV", "CS", "ZURN", "MUV2", "HAN", "ASR", "SAM", "SWISS", "LGEN", "NN", "G", "AV", "RSA", "PHNX", "HIS", "ADM", "Baloise", "HELN", "TOP", "GJF"],
+    "EXH6": ["REL", "WPP", "PUB", "RTL", "UMG", "INF", "ITV", "PRS", "TF1", "MFEA", "VIV", "PEO", "CTS", "STR", "NWS", "EDH", "SCHA", "SBO"],
+    "EXH7": ["MOH", "LOR", "RMI", "HEN3", "KER", "BEI", "PND", "CFR", "CDI", "MONC", "NXT", "BRBY", "SWC", "HUGO", "RCH", "ELE", "HUSQ", "THOM", "UBI", "CDPR"],
+    "EXH8": ["ITX", "HM-B", "ZAL", "JD", "KGF", "BME", "SMWH", "MKS", "ICA", "SBRY", "TSCO", "MRW", "NXT", "CRF", "AHD", "COLR", "JER", "MARS", "BMM"],
+    "EXH9": ["IBE", "ENEL", "EGI", "RWE", "EOAN", "SSE", "NG", "EDF", "SVTI", "TER", "CNA", "UU", "SVT", "PNN", "A2A", "TRN", "HERA", "EDP", "EDPR", "FUM", "VER"],
+    "EXI5": ["VNA", "URW", "LEG", "ARND", "PSP", "SRE", "LAND", "BLND", "GFC", "SPSN", "SEGRO", "BBOX", "DLN", "WKP", "GCP", "TAG", "CST", "KLE", "COV", "WDP"]
 }
 
 US_SECTOR_MAP = {
@@ -47,10 +55,25 @@ US_SECTOR_MAP = {
 }
 
 EU_SECTOR_MAP = {
-    "EXV3.DE": "Technologie", "EXV1.DE": "Finanzen", "EXV9.DE": "Kommunikation", 
-    "EXV6.DE": "Zyklischer Konsum", "EXV5.DE": "Gesundheit", "EXV4.DE": "Industrie", 
-    "EXV2.DE": "Basiskonsum", "EXV8.DE": "Energie", "EXV7.DE": "Materialien", 
-    "EXSA.DE": "Immobilien", "EXVA.DE": "Versorger"
+    "EXV1.DE": "Banken",
+    "EXV2.DE": "Telekommunikation",
+    "EXV3.DE": "Technologie",
+    "EXV4.DE": "Gesundheitswesen",
+    "EXV5.DE": "Automobile & Zulieferer",
+    "EXV6.DE": "Grundstoffe",
+    "EXV7.DE": "Chemie",
+    "EXV8.DE": "Bauhauptgewerbe & Materialien",
+    "EXV9.DE": "Reise & Freizeit",
+    "EXH1.DE": "Energie / Öl & Gas",
+    "EXH2.DE": "Finanzdienstleistungen",
+    "EXH3.DE": "Nahrungsmittel & Getränke",
+    "EXH4.DE": "Industrie & Dienstleistungen",
+    "EXH5.DE": "Versicherungen",
+    "EXH6.DE": "Medien",
+    "EXH7.DE": "Konsumgüter / Haushalt",
+    "EXH8.DE": "Einzelhandel",
+    "EXH9.DE": "Versorger",
+    "EXI5.DE": "Immobilien"
 }
 
 # --- Hilfsfunktionen für das Speichern der Trends ---
@@ -68,13 +91,13 @@ def save_trends(trends_dict):
         json.dump(trends_dict, f)
 
 # --- Hilfsfunktionen für die Marktdaten ---
-@st.cache_data(ttl=14400)  # Erhöht auf 4 Stunden für riesige Aktienlisten
+@st.cache_data(ttl=14400)  # 4 Stunden Cache
 def fetch_sector_rsl(region="US"):
     sector_map = US_SECTOR_MAP if region == "US" else EU_SECTOR_MAP
     tickers = list(sector_map.keys())
     
     try:
-        data = yf.download(tickers, period="200d", progress=False)
+        data = yf.download(tickers, period="200d", progress=False, threads=True)
         
         if data.empty:
             return pd.DataFrame()
@@ -120,13 +143,13 @@ def fetch_sector_rsl(region="US"):
         
     return pd.DataFrame(results).sort_values(by="RSL", ascending=False)
 
-@st.cache_data(ttl=14400) # Erhöht auf 4 Stunden
+@st.cache_data(ttl=14400) 
 def analyze_stocks(tickers, apply_ema_filter, rsl_threshold):
     if not tickers:
         return pd.DataFrame()
     
     try:
-        data = yf.download(tickers, period="200d", progress=False)
+        data = yf.download(tickers, period="200d", progress=False, threads=True)
         
         if data.empty:
             return pd.DataFrame()
@@ -157,14 +180,14 @@ def analyze_stocks(tickers, apply_ema_filter, rsl_threshold):
         if rsl < rsl_threshold:
             continue
             
-        # Volatilität berechnen (Annualisierte Standardabweichung der letzten 130 Tage)
+        # Volatilität berechnen
         returns = series.pct_change().dropna()
         if len(returns) >= 130:
             volatility = float(returns.tail(130).std() * np.sqrt(252))
         else:
             volatility = 0.0
             
-        # Smooth Momentum Score: RSL risikoadjustiert
+        # Smooth Momentum Score
         smooth_rsl = rsl / volatility if volatility > 0 else 0
             
         ema5 = series.ewm(span=5, adjust=False).mean()
@@ -192,7 +215,6 @@ def analyze_stocks(tickers, apply_ema_filter, rsl_threshold):
             
     df = pd.DataFrame(results)
     if not df.empty:
-        # Sortierung erfolgt nach dem risikoadjustierten Score
         df = df.sort_values(by="Smooth RSL", ascending=False).head(15)
     return df
 
@@ -294,7 +316,6 @@ if not df_sectors_us.empty:
 else:
     match_data_us = pd.DataFrame([{"Sektor": k, "Name": v, "RSL Signal": "Neutral"} for k, v in US_SECTOR_MAP.items()])
 
-# Aktuell gespeicherte Trends laden und in das DataFrame einfügen
 saved_trends = load_trends()
 match_data_us['T-S (Manuell)'] = match_data_us['Sektor'].apply(lambda x: saved_trends.get(x, "Neutral"))
 
@@ -302,7 +323,6 @@ col_edit_us, col_result_us = st.columns([1, 1.5])
 
 with col_edit_us:
     st.markdown("**US Eingabemaske**")
-    # Nur Sektor, Name und Dropdown, OHNE RSL Signal Spalte und ohne Index-Zahlen
     edited_df_view_us = st.data_editor(
         match_data_us[['Sektor', 'Name', 'T-S (Manuell)']],
         column_config={"T-S (Manuell)": st.column_config.SelectboxColumn("T-S (Manuell)", options=["Long", "Short", "Neutral"], required=True)},
@@ -311,7 +331,6 @@ with col_edit_us:
         key="editor_us"
     )
 
-    # Nach der Eingabe prüfen, ob sich Werte geändert haben und abspeichern
     current_trends = load_trends()
     needs_save = False
     for _, row in edited_df_view_us.iterrows():
@@ -391,7 +410,6 @@ if not df_sectors_eu.empty:
 else:
     match_data_eu = pd.DataFrame([{"Sektor": k, "Name": v, "RSL Signal": "Neutral"} for k, v in EU_SECTOR_MAP.items()])
 
-# Aktuell gespeicherte Trends für EU laden
 saved_trends_eu = load_trends()
 match_data_eu['T-S (Manuell)'] = match_data_eu['Sektor'].apply(lambda x: saved_trends_eu.get(x, "Neutral"))
 
@@ -399,7 +417,6 @@ col_edit_eu, col_result_eu = st.columns([1, 1.5])
 
 with col_edit_eu:
     st.markdown("**EU Eingabemaske**")
-    # Nur Sektor, Name und Dropdown, OHNE RSL Signal Spalte und ohne Index-Zahlen
     edited_df_view_eu = st.data_editor(
         match_data_eu[['Sektor', 'Name', 'T-S (Manuell)']],
         column_config={"T-S (Manuell)": st.column_config.SelectboxColumn("T-S (Manuell)", options=["Long", "Short", "Neutral"], required=True)},
@@ -408,7 +425,6 @@ with col_edit_eu:
         key="editor_eu"
     )
 
-    # Nach der Eingabe prüfen, ob sich Werte geändert haben und abspeichern
     current_trends_eu = load_trends()
     needs_save_eu = False
     for _, row in edited_df_view_eu.iterrows():
@@ -454,13 +470,23 @@ else:
     for sector in long_matches_eu:
         sector_name = EU_SECTOR_MAP[sector]
         st.markdown(f"**EU Sektor: {sector_name} ({sector})**")
-        eu_tickers = EUROSTOXX_AKTIEN.get(sector_name, [])
-        if eu_tickers:
+        
+        # Extrahiert das reine Kürzel (z.B. "EXV1" aus "EXV1.DE")
+        clean_sector_key = sector.split(".")[0]
+        eu_tickers_raw = EUROSTOXX_GETTEX_AKTIEN.get(clean_sector_key, [])
+        
+        if eu_tickers_raw:
+            # Suffix .DE dynamisch für den yfinance-Abruf anhängen
+            tickers_to_download = [f"{t}.DE" for t in eu_tickers_raw]
+            
             with st.spinner(f"Scanne EU Aktien... dies kann bei großen Sektoren einen Moment dauern."):
-                df_eu_stocks = analyze_stocks(eu_tickers, apply_ema_eu, rsl_limit_eu)
+                df_eu_stocks = analyze_stocks(tickers_to_download, apply_ema_eu, rsl_limit_eu)
                 if not df_eu_stocks.empty:
                     st.dataframe(df_eu_stocks, use_container_width=True, hide_index=True)
-                    euro_strong_tickers.extend(df_eu_stocks['Ticker'].tolist())
+                    
+                    # Suffix für den sauberen TradingView-Export im Hintergrund entfernen
+                    pure_export_tickers = [t.split(".")[0] for t in df_eu_stocks['Ticker'].tolist()]
+                    euro_strong_tickers.extend(pure_export_tickers)
                 else:
                     st.warning(f"Keine Treffer im Sektor {sector_name}.")
 
